@@ -1,0 +1,10 @@
+#ifndef GOSDT_REWRITE_MODEL_HPP
+#define GOSDT_REWRITE_MODEL_HPP
+
+
+struct Model {
+
+};
+
+
+#endif //GOSDT_REWRITE_MODEL_HPP
