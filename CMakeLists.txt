@@ -21,7 +21,7 @@ set(TARGET "gosdt")
 # Target: GOSDT
 # Define the list of source files used to compile the target
 file(GLOB_RECURSE SOURCE_FILES gosdt/*.cpp)
-add_executable(${TARGET} ${SOURCE_FILES} include/json/json.hpp gosdt/encoder.cpp gosdt/encoder.hpp gosdt/gosdt.hpp gosdt/result.cpp gosdt/result.hpp gosdt/gosdt.cpp gosdt/config.cpp gosdt/config.hpp gosdt/model.cpp gosdt/model.hpp)
+add_executable(${TARGET} ${SOURCE_FILES} include/json/json.hpp include/matrix/matrix.hpp)
 target_include_directories(${TARGET} PUBLIC ${CMAKE_SOURCE_DIR}/include)
 
 ## Dependencies: Intel TBB
