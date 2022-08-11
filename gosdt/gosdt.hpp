@@ -11,7 +11,7 @@
 
 namespace GOSDT {
 
-    static Result run_from_path(Config, std::filesystem::path dataset);
+    static Result run_from_path(Config, const std::filesystem::path& dataset_path);
 
 
 };

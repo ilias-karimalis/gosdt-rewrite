@@ -43,11 +43,11 @@ namespace GOSDT {
 
     }
 
-    std::variant<bool, Bitset::AccessErrors> Bitset::get(usize index) const  {
+    std::optional<bool> Bitset::get(usize index) const  {
 
-        if (size == 0) return AccessErrors::EMPTY;
-        if (index >= size ) return AccessErrors::OUTOFBOUND;
-        if (data == nullptr) return AccessErrors::NULLPTR;
+        if (size == 0 || index >= size || data == nullptr) {
+            return std::nullopt;
+        }
 
         auto block_index = index / BITS_PER_BLOCK;
         auto bit_index = index % BITS_PER_BLOCK;
@@ -56,11 +56,11 @@ namespace GOSDT {
         return (bool)((block >> bit_index) % 2);
     }
 
-    std::optional<Bitset::AccessErrors> Bitset::set(usize index, bool value) {
+    void Bitset::set(usize index, bool value) const {
 
-        if (size == 0) return AccessErrors::EMPTY;
-        if (index >= size ) return AccessErrors::OUTOFBOUND;
-        if (data == nullptr) return AccessErrors::NULLPTR;
+        if (size == 0 || index >= size || data == nullptr) {
+            return;
+        }
 
         auto block_index = index / BITS_PER_BLOCK;
         auto bit_index = index % BITS_PER_BLOCK;
@@ -71,9 +71,6 @@ namespace GOSDT {
         } else {
             data[block_index] &= ~mask;
         }
-
-        // No issues so we return an empty optional
-        return {};
     }
 
     usize Bitset::count() const {

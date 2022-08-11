@@ -59,7 +59,7 @@ namespace GOSDT {
                 // Null type elements
                 if (element.empty() || element == "NULL" || element == "null" || element == "Null" || element == "NA"
                     || element == "na" || element == "NaN") {
-                    type_per_column[j] = Type::NULLTYPE;
+                    type_per_column[j] = Type::NULL_TYPE;
                 }
                 // Integer type elements
                 else if ((type == Type::UNDEFINED || type == Type::INTEGRAL)
@@ -102,9 +102,14 @@ namespace GOSDT {
 
         // We set the target column as Categorical so that we ensure equality constraints.
         type_per_column[n_columns - 1] = Type::CATEGORICAL;
+        // At this point we can also count how many classes this categorical type has.
+        n_targets = values_per_column[n_columns - 1].size();
+
 
         // TODO Build a set of encoding rules for each original feature
         // TODO Encode the tokenized data using the encoding rules
+
+        // Construct the set of encoding rules
     }
 
 }

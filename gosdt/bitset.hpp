@@ -11,14 +11,6 @@ namespace GOSDT {
 
     struct Bitset {
 
-        enum class AccessErrors {
-            NULLPTR,
-            OUTOFBOUND,
-            EMPTY,
-            };
-
-        using access_t = std::variant<bool, Bitset::AccessErrors>;
-
         // Not Portable. Requires that each 1 byte == 8 bits
         static const constexpr size_t BITS_PER_BLOCK = 8 * sizeof(usize);
 
@@ -40,14 +32,13 @@ namespace GOSDT {
         // Constructs a bitset from a single fill value and size
         Bitset(usize size, bool fill);
 
-        [[nodiscard]] std::variant<bool, Bitset::AccessErrors> get(usize index) const;
-        std::optional<Bitset::AccessErrors> set(usize index, bool value);
+        [[nodiscard]] std::optional<bool> get(usize index) const;
+        void set(usize index, bool value) const;
 
-        usize count() const;
+        [[nodiscard]] usize count() const;
 
 
         // TODO add more as we need it
-
 
 
         bool empty() const;
