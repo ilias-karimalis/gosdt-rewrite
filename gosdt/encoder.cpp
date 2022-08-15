@@ -5,26 +5,30 @@ namespace GOSDT {
     const std::regex Encoder::integral_regex(R"(^[+-]?\d+$)");
     const std::regex Encoder::rational_regex(R"(^[+-]?\d+\.\d*$)");
 
-    Encoder::Encoder(std::istream &input_stream) {
-
+    Encoder::Encoder(std::istream &input_stream)
+    {
         static const char CSV_SEPARATOR = ',';
 
         // Tokenize the csv input.
         io::LineReader line_reader("", input_stream);
-        std::string token; // Used all over the place as a placeholder for an extracted token
+        // Used all over the place as a placeholder for an extracted token
+        std::string token;
 
 
         // Tokenize Header
         const char * header_row_string = line_reader.next_line();
         std::stringstream header_row_stream(header_row_string);
-        while (header_row_stream.good()) {
+
+        while (header_row_stream.good())
+        {
             std::getline(header_row_stream, token, CSV_SEPARATOR);
             header.push_back(token);
             n_columns = header.size();
         }
 
         // TODO if n_columns = 0, we have an issue and should just crash.
-        // TODO Figure out a better error reporting system rather than just using asserts.
+        // TODO Figure out a better error reporting system rather than just
+        // using asserts.
         assert(n_columns > 0);
 
         // Tokenize the rest of the csv file
@@ -47,18 +51,22 @@ namespace GOSDT {
         values_per_column.resize(n_columns);
         type_per_column.resize(n_columns, Type::UNDEFINED);
 
-        // Columns in the original dataset which should be tossed away for various reasons
+        // Columns in the original dataset which should be tossed away for
+        // various reasons
         std::vector<bool> skip_column;
         skip_column.resize(n_columns, false);
 
-        for (usize i = 0; i < n_rows; i++) {
-            for (usize j = 0; j < n_columns; j++) {
+        for (usize i = 0; i < n_rows; i++)
+        {
+            for (usize j = 0; j < n_columns; j++)
+            {
                 auto element = tokens[i][j];
                 auto type = type_per_column[j];
 
                 // Null type elements
-                if (element.empty() || element == "NULL" || element == "null" || element == "Null" || element == "NA"
-                    || element == "na" || element == "NaN") {
+                if (element.empty() || element == "NULL" || element == "null"
+                    || element == "Null" || element == "NA" || element == "na"
+                    || element == "NaN") {
                     type_per_column[j] = Type::NULL_TYPE;
                 }
                 // Integer type elements
@@ -67,16 +75,15 @@ namespace GOSDT {
                     type_per_column[j] = Type::INTEGRAL;
                 }
                 // Rational type elements
-                else if ((type == Type::UNDEFINED || type == Type::INTEGRAL || type == Type::RATIONAL)
-                    && (std::regex_match(element, rational_regex))) {
+                else if ((type == Type::UNDEFINED || type == Type::INTEGRAL
+                    || type == Type::RATIONAL)
+                    && std::regex_match(element, rational_regex)) {
                     type_per_column[j] = Type::RATIONAL;
                 }
                 // We default to equality based Categorical elements
                 else {
                     type_per_column[j] = Type::CATEGORICAL;
                 }
-
-                values_per_column[j].insert(element);
 
                 if (j == n_columns - 1) {
                     target_concentration[element] += 1;
@@ -88,21 +95,25 @@ namespace GOSDT {
         for (usize j = 0; j < n_columns; j++) {
             auto cardinality = values_per_column[j].size();
 
-            // There's only 1 type in this feature so it's useless for classification
-            // so we will mark it as redundant and ignore it when building the binarized dataset
+            // There's only 1 type in this feature so it's useless for
+            // classification so we will mark it as redundant and ignore it
+            // when building the binarized dataset
             if (cardinality <= 1) {
                 type_per_column[j] = Type::REDUNDANT;
             }
-            // Regardless of the inferred value type, if there are only two elements of that feature
-            // then we can already treat it as binarized (if this column is not already invalid)
+            // Regardless of the inferred value type, if there are only two
+            // elements of that feature then we can already treat it as
+            // binarized (if this column is not already invalid)
             else if (cardinality == 2 && !skip_column[j]) {
                 type_per_column[j] = Type::BINARY;
             }
         }
 
-        // We set the target column as Categorical so that we ensure equality constraints.
+        // We set the target column as Categorical so that we ensure equality
+        // constraints.
         type_per_column[n_columns - 1] = Type::CATEGORICAL;
-        // At this point we can also count how many classes this categorical type has.
+        // At this point we can also count how many classes this categorical
+        // type has.
         n_targets = values_per_column[n_columns - 1].size();
 
 

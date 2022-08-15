@@ -11,7 +11,7 @@
 
 namespace GOSDT {
 
-    class Config {
+    struct Config {
 
         using json = nlohmann::json;
 
@@ -24,7 +24,6 @@ namespace GOSDT {
         /// Config functions
         static Config configure_from_stream(std::istream &stream_config);
         static Config configure_from_json(json json_config);
-
     };
 
 }

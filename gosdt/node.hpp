@@ -6,13 +6,13 @@
 
 namespace GOSDT {
 
-    class Node {
+    struct Node {
 
         Bitset identifier;
         Bitset features;
 
-        u32 upper_bound;
-        u32 lower_bound;
+        f32 upper_bound;
+        f32 lower_bound;
 
         Node(Bitset const &identifier, Bitset const &features);
 

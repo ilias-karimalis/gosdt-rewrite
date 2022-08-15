@@ -16,32 +16,46 @@ namespace GOSDT {
 
         // Internal memory structure
         usize * data = nullptr;
-        mp_size_t n_blocks; // number of usize blocks allocated and stored in data
+        mp_size_t n_blocks = 0; // number of usize blocks allocated and stored in data
 
         // External memory structure
-        usize size; // number of bools represented by this Bitset
+        usize size; // number of booleans represented by this Bitset
 
 
-        // The number of possible additional splits which can be conducted
-        // If it's -1 that signifies that there is no depth budget
-        // std::optional<i8> depth_budget = std::nullopt;
+        // TODO I think that depth_budget should be encapsulated under Nodes
+        // not in the Bitset. The number of possible additional splits which
+        // can be conducted. If it's -1 that signifies that there is no depth
+        // budget
 
         // the number of bits used in the last used block
         u8 n_bits_used_last_block;
 
+        // TODO maybe add a construct which does not fill and only bothers to
+        //      allocate the memory for the Bitset. this could be used in
+        //      bit_and where we know that we can avoid filling that Bitset.
+
         // Constructs a bitset from a single fill value and size
         Bitset(usize size, bool fill);
 
-        [[nodiscard]] std::optional<bool> get(usize index) const;
-        void set(usize index, bool value) const;
+        [[nodiscard]] std::optional<bool>
+        get(usize index) const;
 
-        [[nodiscard]] usize count() const;
+        void
+        set(usize index, bool value) const;
+
+        // Assumes that the last block of memory is filled with zeros outside
+        // of the n_used_last_block bytes.
+        [[nodiscard]] usize
+        count() const;
 
 
-        // TODO add more as we need it
+        // TODO add more functionality as we need it
 
+        // flip: whether to treat the bits of b1 as flipped
+        static Bitset
+        bit_and(Bitset const& b1, Bitset const& b2, bool flip = false);
 
-        bool empty() const;
+        [[nodiscard]] bool empty() const;
     };
 
 }

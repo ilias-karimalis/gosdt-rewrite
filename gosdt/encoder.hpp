@@ -1,5 +1,4 @@
-#ifndef GOSDT_REWRITE_ENCODER_HPP
-#define GOSDT_REWRITE_ENCODER_HPP
+#pragma once
 
 #include <sstream>
 #include <iostream>
@@ -19,7 +18,6 @@ namespace GOSDT {
         enum class Type {
             RATIONAL,
             INTEGRAL,
-            ENUMERABLE [[maybe_unused]], // I don't like this one... and I also don't think it's necessary
             BINARY,
             CATEGORICAL,
             REDUNDANT,
@@ -35,11 +33,15 @@ namespace GOSDT {
             EQ,     // ==
         };
 
-        static const std::regex integral_regex;         ///< RegEx for parsing integer types
-        static const std::regex rational_regex;         ///< RegEx for parsing rational types
+        /// RegEx for parsing integer types
+        static const std::regex integral_regex;
+        /// RegEx for parsing rational types
+        static const std::regex rational_regex;
 
-        std::vector<std::string> header;                ///< header of the ingested csv file
-        std::vector<std::vector<std::string>> tokens;   ///< strings representing each entry of the ingested csv file
+        /// header of the ingested csv file
+        std::vector<std::string> header;
+        /// strings representing each entry of the ingested csv file
+        std::vector<std::vector<std::string>> tokens;
 
         usize n_rows;       ///< number of rows in the PRE-binarized dataset
         usize n_columns;    ///< number of columns in the PRE-binarized dataset
@@ -47,10 +49,11 @@ namespace GOSDT {
 
         std::vector<std::set<std::string>> values_per_column;
         std::vector<Type> type_per_column;
-        // Maybe add cardinality_per_column later, not needed as far as I can tell.
+        // Maybe add cardinality_per_column later, not needed as far as I can
+        // tell.
 
-        // Maps from Target values (found in the last column) to their concentration
-        // in the dataset
+        // Maps from Target values (found in the last column) to their
+        // concentration in the dataset
         std::map<std::string, u32> target_concentration;
 
 
@@ -58,10 +61,9 @@ namespace GOSDT {
 
         std::vector<Bitset> binary_rows;
 
-        usize n_binary_rows;        ///< number of rows in the binarized dataset
-        usize n_binary_columns;     ///< number of columns in the binarized dataset
+        usize n_binary_rows;    ///< number of rows in the binarized dataset
+        usize n_binary_columns; ///< number of columns in the binarized dataset
     };
 
 }
 
-#endif //GOSDT_REWRITE_ENCODER_HPP
