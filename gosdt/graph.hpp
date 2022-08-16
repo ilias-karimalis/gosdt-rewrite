@@ -1,16 +1,17 @@
-#ifndef GOSDT_REWRITE_GRAPH_HPP
-#define GOSDT_REWRITE_GRAPH_HPP
+#pragma once
 
 #include <unordered_map>
 
+#include "bitset.hpp"
 #include "node.hpp"
 
 namespace GOSDT {
 
     struct Graph {
 
-        std::unordered_map<Bitset, Node *> node_map;
-        std::unordered_map<Node, std::vector<Node *>> parent_map;
+        std::unordered_map<Bitset, Node *, BitsetHash> node_map;
+
+        std::unordered_map<std::pair<Bitset, int>, Bitset *, ChildHash>;
 
         Graph() = default;
         ~Graph() = default;
@@ -22,6 +23,9 @@ namespace GOSDT {
 
     };
 
+    struct ChildHash {
+        std::size_t operator()(const std::pair<Bitset, int> &key);
+    };
+
 }
 
-#endif //GOSDT_REWRITE_GRAPH_HPP

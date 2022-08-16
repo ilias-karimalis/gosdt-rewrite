@@ -16,7 +16,8 @@ namespace GOSDT {
 
         // Internal memory structure
         usize * data = nullptr;
-        mp_size_t n_blocks = 0; // number of usize blocks allocated and stored in data
+        // number of usize blocks allocated and stored in data
+        mp_size_t n_blocks = 0;
 
         // External memory structure
         usize size; // number of booleans represented by this Bitset
@@ -56,6 +57,13 @@ namespace GOSDT {
         bit_and(Bitset const& b1, Bitset const& b2, bool flip = false);
 
         [[nodiscard]] bool empty() const;
+
+    };
+
+
+    struct BitsetHash {
+
+        std::size_t operator()(const Bitset &bitset);
     };
 
 }

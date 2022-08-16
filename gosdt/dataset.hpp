@@ -38,9 +38,13 @@ namespace GOSDT {
         // NOTE: not sure if all of these are actually needed so I'll avoid
         //       writing these for now.
         Matrix<f32> costs;
+        std::vector<f32> diff_costs;
 
         explicit Dataset(std::istream & input_stream);
         ~Dataset() = default;
+
+        std::tuple<f32, f32>
+        calculate_bounds(Bitset * capture_set);
 
     };
 

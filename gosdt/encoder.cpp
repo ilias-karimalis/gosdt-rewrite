@@ -14,19 +14,15 @@ namespace GOSDT {
         // Used all over the place as a placeholder for an extracted token
         std::string token;
 
-
         // Tokenize Header
         const char * header_row_string = line_reader.next_line();
         std::stringstream header_row_stream(header_row_string);
-
         while (header_row_stream.good())
         {
             std::getline(header_row_stream, token, CSV_SEPARATOR);
             header.push_back(token);
             n_columns = header.size();
         }
-
-        // TODO if n_columns = 0, we have an issue and should just crash.
         // TODO Figure out a better error reporting system rather than just
         // using asserts.
         assert(n_columns > 0);
@@ -55,7 +51,6 @@ namespace GOSDT {
         // various reasons
         std::vector<bool> skip_column;
         skip_column.resize(n_columns, false);
-
         for (usize i = 0; i < n_rows; i++)
         {
             for (usize j = 0; j < n_columns; j++)
@@ -94,7 +89,6 @@ namespace GOSDT {
         // We can do further type specification based on column statistics
         for (usize j = 0; j < n_columns; j++) {
             auto cardinality = values_per_column[j].size();
-
             // There's only 1 type in this feature so it's useless for
             // classification so we will mark it as redundant and ignore it
             // when building the binarized dataset

@@ -2,8 +2,9 @@
 
 namespace GOSDT {
 
-    std::optional<Node *> Graph::find(Bitset &identifier) {
-
+    std::optional<Node *>
+    Graph::find(Bitset &identifier)
+    {
         // TODO make Bitset hashable.
         auto found_node = node_map.find(identifier);
         if (found_node == node_map.end()) {
@@ -12,20 +13,21 @@ namespace GOSDT {
         }
 
         return found_node->second;
-
     }
 
 
-    void Graph::insert(Bitset & identifier, Node * node) {
-
+    void
+    Graph::insert(Bitset & identifier, Node * node)
+    {
         auto is_in_graph = node_map.find(identifier) == node_map.end();
         if (is_in_graph) return;
 
         node_map.insert({identifier, node});
     }
 
-    std::vector<Node *> Graph::parents(Node & node) {
-
+    std::vector<Node *>
+    Graph::parents(Node & node)
+    {
         auto found_parents = parent_map.find(node);
         if (found_parents != parent_map.end())
             return {};
@@ -33,5 +35,11 @@ namespace GOSDT {
         return found_parents->second;
     }
 
-
+    std::size_t
+    ChildHash::operator()(const std::pair<Bitset, int> &key)
+    {
+        std::size_t seed = key.second;
+        seed ^= BitsetHash(key.first) + 0x9E3779B9 + (seed << 6) + (seed >> 2);
+        return seed;
+    }
 }

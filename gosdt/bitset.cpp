@@ -99,5 +99,13 @@ namespace GOSDT {
         return mpn_zero_p(data, n_blocks);
     }
 
+    std::size_t
+    BitsetHash::operator()(const Bitset &bitset)
+    {
+        size_t hash = bitset.size;
+        return hash;
+    }
+
+
 
 }

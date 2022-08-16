@@ -39,17 +39,20 @@ namespace GOSDT {
         void
         load_configuration(Config configuration);
 
-        void
-        optimize();
-
         OptimizerResult
-        extract();
+        optimize();
 
         std::pair<Bitset, Bitset>
         split_bitset(usize feature_index, Bitset capture_set);
 
-        Node
+        Node *
         find_or_create(Bitset& identifier);
+
+        f32
+        compute_lowerbound(Bitset * identifier);
+
+        f32
+        compute_upperbound(Bitset * identifier);
 
     };
 

@@ -18,6 +18,7 @@
 template<class T>
 struct Matrix {
 
+
     [[maybe_unused]] size_t n_rows;
     size_t n_columns;
 
@@ -25,25 +26,27 @@ struct Matrix {
     // for better cache coherence in row major order.
     T * data;
 
-    Matrix(size_t n_rows, size_t n_columns);
-    ~Matrix();
+    Matrix() = default;
+    ~Matrix() = default;
+    Matrix(size_t n_rows, size_t n_columns, const T& initial_value);
     T operator()(std::size_t row_index, std::size_t column_index) const;
     T& operator()(std::size_t row_index, std::size_t column_index);
 
 };
 
 template<class T>
-[[maybe_unused]] Matrix<T>::Matrix(size_t n_rows, size_t n_columns)
+Matrix<T>::Matrix(size_t n_rows, size_t n_columns, const T& initial_value)
 : n_rows(n_rows), n_columns(n_columns)
 {
     assert(n_rows > 0);
     assert(n_columns > 0);
     data = new T[n_rows * n_columns];
-}
 
-template<class T>
-Matrix<T>::~Matrix() {
-    delete[] data;
+    for (auto i = 0u; i < n_rows; i++) {
+        for (auto j = 0u; j < n_columns; j++) {
+            data[i * n_columns + j] = initial_value;
+        }
+    }
 }
 
 template<class T>

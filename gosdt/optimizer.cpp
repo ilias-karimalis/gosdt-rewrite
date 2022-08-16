@@ -18,7 +18,7 @@ namespace GOSDT {
         // changes certain specific config flags
     }
 
-    void
+    Optimizer::OptimizerResult
     GOSDT::Optimizer::optimize()
     {
 
@@ -51,8 +51,10 @@ namespace GOSDT {
                 //      with a min here but that must be wrong because we'd
                 //      never converge if that were the case
                 // Create bounds as if feature were chosen for splitting
-                lower_bound_prime = std::max(lower_bound_prime, lchild.lower_bound + rchild.lower_bound);
-                upper_bound_prime = std::min(upper_bound_prime, lchild.upper_bound + rchild.upper_bound);
+                lower_bound_prime = std::max(
+                    lower_bound_prime,lchild.lower_bound + rchild.lower_bound);
+                upper_bound_prime = std::min(
+                    upper_bound_prime, lchild.upper_bound + rchild.upper_bound);
             }
 
             // Signal the parents if an update occurred
@@ -125,25 +127,84 @@ namespace GOSDT {
         return std::make_pair(left, right);
     }
 
-    Node
-    Optimizer::find_or_create(Bitset &identifier)
+    f32
+    compute_lowerbound(Bitset * identifier)
+    {
+        // TODO implement compute_lowerbound
+    }
+
+    f32
+    compute_upperbound(Bitset * identifier)
+    {
+        // TODO implement compute_upperbound
+    }
+
+    std::tuple<f32, f32>
+    compute_bounds(Bitset * identifier)
+    {
+        // We should never be able to get here if dataset is nullopt
+        auto dataset_val = dataset.value();
+        Bitset buffer;
+
+        // Compute the distribution of each of the target values in what is
+        // captured by the identifier bitmask
+        u32 distribution[dataset_val.n_targets];
+        for (auto target = 0u; target < dataset_val.n_targets; target++)
+        {
+            distribution[target] =
+                    Bitset::bit_and(dataset_val.targets[target], identifier)
+                    .count();
+        }
+
+        // Find which prediction incurs the lowest cost
+        float minimum_cost = std::numeric_limits<float>::max();
+        usize cost_minimizer = 0;
+
+
+        for (auto i = 0u; i < dataset_val.n_targets; i++)
+        {
+            auto cost = 0.0;
+            for (auto j = 0u; j < dataset_val.n_targets; j++)
+            {
+                cost += dataset_val.costs(i, j) * distribution[j];
+            }
+
+            // Track the prediction that minimizes cost
+            if (cost < minimum_cost) {
+                minimum_cost = cost;
+                cost_minimizer = i;
+            }
+        }
+
+        // Compute the equivalent point loss for this capture set
+        float eqp_loss = 0.0;
+        float max_cost_reduction = 0.0;
+        float support = (float)(capture_set.count()) / (float)(dataset_val.n_rows);
+        for (auto target = 0u; target < dataset_val.n_targets; target++)
+        {
+            // Maximum cost difference across predictions
+        }
+
+        // TODO the more of this function I write, the more I understand why it
+        //      was originally writen as part of Dataset, I think it makes sense
+        //      for it to be there now.
+
+    }
+
+    Node *
+    Optimizer::find_or_create(Bitset * identifier)
     {
         auto result_from_graph = graph.find(identifier);
 
         if (result_from_graph.has_value()) {
             return result_from_graph.value();
         }
-        // TODO implement this.
+        // TODO implement find_or_create
+
         // We need to create the Node to return
-        Node()
-        return Node(GOSDT::Bitset(), GOSDT::Bitset());
+        Node * node = new Node(identifier);
+        graph.insert(identifier, node);
+        return node;
     }
-
-    Optimizer::OptimizerResult
-    Optimizer::extract()
-    {
-        return Optimizer::OptimizerResult();
-    }
-
 
 }
