@@ -1,45 +1,30 @@
 #include "graph.hpp"
+#include "optimizer.hpp"
 
 namespace GOSDT {
 
-    std::optional<Node *>
-    Graph::find(Bitset &identifier)
+    Node&
+    Graph::find_or_create(Bitset identifier, Node* parent, const Optimizer& optimizer)
     {
-        // TODO make Bitset hashable.
-        auto found_node = node_map.find(identifier);
-        if (found_node == node_map.end()) {
-            // Node was not found in graph.
-            return std::nullopt;
+
+        if (node_set.contains(identifier)) {
+            return const_cast<Node &>(* node_set.find(identifier));
         }
-
-        return found_node->second;
+        auto [ub, lb, mcr, cm] = optimizer.calculate_bounds(identifier);
+        // Here we're creating a copy of identifier in calling Node ctor.
+        auto node = Node(std::move(identifier), ub, lb, mcr, cm, parent);
+        return const_cast<Node &>(* node_set.emplace(std::move(node)).first);
     }
 
-
-    void
-    Graph::insert(Bitset & identifier, Node * node)
+    bool
+    Graph::contains(const Bitset &identifier)
     {
-        auto is_in_graph = node_map.find(identifier) == node_map.end();
-        if (is_in_graph) return;
-
-        node_map.insert({identifier, node});
+        return node_set.contains(identifier);
     }
 
-    std::vector<Node *>
-    Graph::parents(Node & node)
+    Node&
+    Graph::find(const Bitset &identifier)
     {
-        auto found_parents = parent_map.find(node);
-        if (found_parents != parent_map.end())
-            return {};
-
-        return found_parents->second;
-    }
-
-    std::size_t
-    ChildHash::operator()(const std::pair<Bitset, int> &key)
-    {
-        std::size_t seed = key.second;
-        seed ^= BitsetHash(key.first) + 0x9E3779B9 + (seed << 6) + (seed >> 2);
-        return seed;
+        return const_cast<Node &>(* node_set.find(identifier));
     }
 }

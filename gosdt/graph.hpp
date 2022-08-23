@@ -1,30 +1,33 @@
 #pragma once
 
-#include <unordered_map>
+#include <unordered_set>
 
 #include "bitset.hpp"
 #include "node.hpp"
 
 namespace GOSDT {
 
+    // Pre declaration of Optimizer;
+    struct Optimizer;
+
     struct Graph {
 
-        std::unordered_map<Bitset, Node *, BitsetHash> node_map;
-
-        std::unordered_map<std::pair<Bitset, int>, Bitset *, ChildHash>;
+        // NOTE the Graph will own both the Bitset and Nodes that they contain!!
+//        std::unordered_map<Bitset, Node, BitsetHash> node_map;
+        std::unordered_set<Node, NodeHasher, std::equal_to<>> node_set;
 
         Graph() = default;
         ~Graph() = default;
 
-        std::optional<Node *> find(Bitset & identifier);
-        void insert(Bitset & identifier, Node * node);
+        Node&
+        find_or_create(Bitset identifier, Node* parent, const Optimizer& optimizer);
 
-        std::vector<Node *> parents(Node & node);
+        bool
+        contains(const Bitset& identifier);
 
-    };
+        Node&
+        find(const Bitset& identifier);
 
-    struct ChildHash {
-        std::size_t operator()(const std::pair<Bitset, int> &key);
     };
 
 }
