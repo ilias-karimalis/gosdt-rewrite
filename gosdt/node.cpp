@@ -2,13 +2,15 @@
 
 namespace GOSDT {
 
-    Node::Node(Bitset const &identifier, Bitset const &features)
-        : identifier(identifier), features(features)
+    Node::Node()
+    : upper_bound(std::numeric_limits<f32>::max()), lower_bound(-std::numeric_limits<f32>::max())
+    {}
+
+    Node::Node(Bitset capture_set, f32 ub, f32 lb, f32 mcr, usize cm, Node *parent)
+    : capture_set(std::move(capture_set)), upper_bound(ub), lower_bound(lb), max_cost_reduction(mcr),
+    cost_minimizer(cm)
     {
-        bool is_terminal_node = (identifier.count() <= 1) || features.empty();
-
-        // TODO the rest of this
-
+        if (parent != nullptr)
+            parents.push_back(parent);
     }
-
 }
