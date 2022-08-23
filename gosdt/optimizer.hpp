@@ -1,17 +1,20 @@
 #pragma once
 
+#include <queue>
+
 #include "utils.hpp"
-#include "bitset.hpp"
-#include "dataset.hpp"
-#include "queue.hpp"
-#include "graph.hpp"
 #include "model.hpp"
+#include "bitset.hpp"
+#include "config.hpp"
+#include "dataset.hpp"
+#include "message.hpp"
+#include "graph.hpp"
 
 namespace GOSDT {
 
     struct Optimizer {
 
-        struct OptimizerResult {
+        struct Result {
             f32 time;
             u32 iterations;
             f32 model_loss;
@@ -19,40 +22,27 @@ namespace GOSDT {
             std::vector<Model> models;
         };
 
-        std::optional<Bitset> root;
-        std::optional<Config> configuration;
-        std::optional<Dataset> dataset;
+        Bitset root;
+        const Config& config;
+        const Dataset& dataset;
 
         // TODO the graph and queue have not been implemented yet.
         Graph graph;
-        Queue queue;
+        std::priority_queue<Message, std::vector<Message>, std::greater<>> queue;
 
-        std::optional<f32> global_boundary;
         std::optional<f32> global_lower_bound;
         std::optional<f32> global_upper_bound;
 
-        Optimizer() = default;
+        Optimizer(const Dataset& dataset, const Config& config);
 
-        void
-        load_dataset(Dataset dataset);
-
-        void
-        load_configuration(Config configuration);
-
-        OptimizerResult
+        Result
         optimize();
 
         std::pair<Bitset, Bitset>
-        split_bitset(usize feature_index, Bitset capture_set);
+        split_bitset(usize feature_index, const Bitset & capture_set);
 
-        Node *
-        find_or_create(Bitset& identifier);
-
-        f32
-        compute_lowerbound(Bitset * identifier);
-
-        f32
-        compute_upperbound(Bitset * identifier);
+        [[nodiscard]] std::tuple<f32, f32, f32, usize>
+        calculate_bounds(const Bitset& capture_set) const;
 
     };
 
