@@ -1,5 +1,7 @@
 #include "encoder.hpp"
 
+#include <cstdlib>
+
 namespace GOSDT {
 
     const std::regex Encoder::integral_regex(R"(^[+-]?\d+$)");
@@ -7,32 +9,33 @@ namespace GOSDT {
 
     Encoder::Encoder(std::istream &input_stream)
     {
+        std::cout << "[Encoder::Encoder] Tokenizing csv data file\n";
         static const char CSV_SEPARATOR = ',';
 
         // Tokenize the csv input.
         io::LineReader line_reader("", input_stream);
         // Used all over the place as a placeholder for an extracted token
-        std::string token;
+        std::string header_token;
 
         // Tokenize Header
         const char * header_row_string = line_reader.next_line();
         std::stringstream header_row_stream(header_row_string);
         while (header_row_stream.good())
         {
-            std::getline(header_row_stream, token, CSV_SEPARATOR);
-            header.push_back(token);
+            std::getline(header_row_stream, header_token, CSV_SEPARATOR);
+            header.push_back(header_token);
             n_columns = header.size();
         }
-        // TODO Figure out a better error reporting system rather than just
-        // using asserts.
+        // TODO Figure out a better error reporting system rather than just using asserts.
         assert(n_columns > 0);
 
         // Tokenize the rest of the csv file
         n_rows = 0;
         while (const char * row_string = line_reader.next_line()) {
+            // TODO I shouldn't have to create a new stringstream everytime, there must be a more efficient solution.
             std::stringstream row_stream(row_string);
-            static std::vector<std::string> row;
-
+            std::string token;
+            std::vector<std::string> row;
             while (row_stream.good()) {
                 std::getline(row_stream, token, CSV_SEPARATOR);
                 row.push_back(token);
@@ -44,6 +47,7 @@ namespace GOSDT {
         }
 
         // Parse the Tokenized CSV input
+        std::cout << "[Encoder::Encoder] Determining the cell types of the dataset\n";
         values_per_column.resize(n_columns);
         type_per_column.resize(n_columns, Type::UNDEFINED);
 
@@ -80,6 +84,7 @@ namespace GOSDT {
                     type_per_column[j] = Type::CATEGORICAL;
                 }
 
+                values_per_column[j].insert(element);
                 if (j == n_columns - 1) {
                     target_concentration[element] += 1;
                 }
@@ -87,6 +92,7 @@ namespace GOSDT {
         }
 
         // We can do further type specification based on column statistics
+        std::cout << "[Encoder::Encoder] Performing further type specification based on column statistics\n";
         for (usize j = 0; j < n_columns; j++) {
             auto cardinality = values_per_column[j].size();
             // There's only 1 type in this feature so it's useless for
@@ -109,12 +115,88 @@ namespace GOSDT {
         // At this point we can also count how many classes this categorical
         // type has.
         n_targets = values_per_column[n_columns - 1].size();
+        std::cout << "[Encoder::Encoder] Constructing the set of encoding rules\n";
+        std::vector<std::tuple<usize, Type, Relation, std::string>> codex;
+        for (usize i = 0; i < n_columns; i++)
+        {
+            auto type = type_per_column[i];
+            auto initial_size = codex.size();
+            auto value_set = values_per_column[i];
+            n_binary_columns = codex.size();
+            switch (type)
+            {
+                case Type::BINARY:
+                    assert(value_set.size() == 2);
+                    codex.emplace_back(i, Type::BINARY, Relation::EQ, *value_set.begin());
+                    break;
 
+                case Type::CATEGORICAL:
+                    for (const auto& value: value_set)
+                    {
+                        codex.emplace_back(i, Type::CATEGORICAL, Relation::EQ, value);
+                    }
+                    break;
 
-        // TODO Build a set of encoding rules for each original feature
-        // TODO Encode the tokenized data using the encoding rules
+                case Type::INTEGRAL:
+                    for (const auto& value: value_set)
+                    {
+                        codex.emplace_back(i, Type::INTEGRAL, Relation::GEQ, std::to_string(atoi(value.c_str())));
+                    }
+                    break;
 
-        // Construct the set of encoding rules
+                case Type::RATIONAL: {
+                    std::set<f64> parsed_value_set;
+                    for (const auto& value: value_set) {
+                        parsed_value_set.emplace(std::strtod(value.c_str(), nullptr));
+                    }
+                    f64 base_value = *parsed_value_set.begin();
+                    for (auto parsed_value: parsed_value_set) {
+                        f64 threshold = 0.5 * (parsed_value + base_value);
+                        base_value = parsed_value;
+                        codex.emplace_back(i, Type::RATIONAL, Relation::GEQ, std::to_string(threshold));
+                    }
+                }
+                break;
+
+                default:
+                    continue;
+            }
+
+            if (i == n_columns - 1) {
+                n_binary_targets = codex.size() - initial_size;
+            }
+        }
+        n_binary_columns = codex.size() - n_binary_targets;
+
+        std::cout << "[Encoder::Encoder] Encoding the tokenized data using codex\n";
+        for (usize i = 0; i < n_rows; i++)
+        {
+            // This is a place where we wish this wasn't filled.
+            Bitset row(n_binary_columns + n_binary_targets, false);
+            for (usize j = 0; j < n_binary_columns + n_binary_targets; j++)
+            {
+                auto& [index, type, relation, reference] = codex[j];
+                bool value;
+                switch (type)
+                {
+                    case Type::INTEGRAL:
+                        value = atoi(tokens[i][index].c_str()) >=
+                                atoi(reference.c_str());
+                        break;
+
+                    case Type::RATIONAL:
+                        value = atof(tokens[i][index].c_str()) >=
+                                atof(reference.c_str());
+                        break;
+
+                    default:
+                        value = tokens[i][index] == reference;
+                        break;
+                }
+                row.set(j, value);
+            }
+            binary_rows.push_back(std::move(row));
+        }
     }
 
 }
