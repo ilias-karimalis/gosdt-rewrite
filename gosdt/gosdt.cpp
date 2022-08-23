@@ -11,9 +11,8 @@
 
 // NOTE: This will be one of the main interfaces to the algorithm
 GOSDT::Result
-GOSDT::run_from_path(
-    GOSDT::Config config,
-    const std::filesystem::path& dataset_path)
+GOSDT::run_from_path(GOSDT::Config config,
+                     const std::filesystem::path& dataset_path)
 {
     Result result{};
 
@@ -28,9 +27,8 @@ GOSDT::run_from_path(
     auto dataset = Dataset(dataset_stream);
     auto configuration = Config::configure_from_json(json_config);
 
-    auto optimizer = Optimizer();
-    optimizer.load_dataset(dataset);
-    optimizer.load_configuration(configuration);
+    std::cout << "[GOSDT::run_from_path] Completed Dataset and Config Creation\n";
+    auto optimizer = Optimizer(dataset, configuration);
 
     // Perform the optimization
     auto optimizer_result = optimizer.optimize();
