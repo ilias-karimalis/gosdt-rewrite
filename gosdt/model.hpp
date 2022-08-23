@@ -1,10 +1,5 @@
-#ifndef GOSDT_REWRITE_MODEL_HPP
-#define GOSDT_REWRITE_MODEL_HPP
-
+#pragma once
 
 struct Model {
 
 };
-
-
-#endif //GOSDT_REWRITE_MODEL_HPP
