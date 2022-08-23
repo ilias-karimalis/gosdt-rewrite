@@ -24,6 +24,7 @@ struct Matrix {
     // for better cache coherence in row major order.
     T * data;
 
+    Matrix();
     Matrix(size_t n_rows, size_t n_columns, const T& initial_value);
     Matrix(const Matrix& other);
     Matrix(Matrix&& other) noexcept;
@@ -36,6 +37,11 @@ struct Matrix {
     T& operator()(std::size_t row_index, std::size_t column_index);
 
 };
+
+template<class T>
+Matrix<T>::Matrix()
+: n_rows(0), n_columns(0), data(nullptr)
+{}
 
 template<class T>
 Matrix<T>::Matrix(size_t n_rows, size_t n_columns, const T& initial_value)
@@ -94,6 +100,7 @@ Matrix<T>::operator=(const Matrix& other)
             data[i * n_columns + j] = other.data[i * n_columns + j];
         }
     }
+    return *this;
 }
 
 template<class T>
@@ -107,6 +114,7 @@ Matrix<T>::operator=(Matrix&& other) noexcept
     other.data = nullptr;
     other.n_rows = 0;
     other.n_columns = 0;
+    return *this;
 }
 
 
@@ -114,6 +122,7 @@ template<class T>
 T
 Matrix<T>::operator()(std::size_t row_index, std::size_t column_index) const
 {
+    assert(row_index < n_rows && column_index < n_columns);
     return data[row_index * n_columns + column_index];
 }
 
@@ -121,6 +130,7 @@ template<class T>
 T&
 Matrix<T>::operator()(std::size_t row_index, std::size_t column_index)
 {
+    assert(row_index < n_rows && column_index < n_columns);
     return data[row_index * n_columns + column_index];
 }
 
