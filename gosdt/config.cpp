@@ -10,6 +10,10 @@ namespace GOSDT {
     }
 
     Config Config::configure_from_json(json json_config) {
-        return {};
+        return {
+            .uncertainty_tolerance = 0.0,
+            .max_height = 32,
+            .time_limit = 100
+        };
     }
 }
