@@ -1,55 +1,55 @@
 cmake_minimum_required(VERSION 3.20)
 
-project(gosdt-REWRITE)
+# Project `Name` and `Language`
+project(GOSDT-Rewrite)
 
-set(CMAKE_CXX_STANDARD 17)
+# Set the language standard to `c++20`
+set(CMAKE_CXX_STANDARD 20)
 
 # Set the compiler flags
 set(CMAKE_C_FLAGS                   "${CMAKE_C_FLAGS} -Wall -Wextra")
-set(CMAKE_C_FLAGS_DEBUG             "${CMAKE_C_FLAGS_DEBUG} -O0 -DDEBUG")
+set(CMAKE_C_FLAGS_DEBUG             "${CMAKE_C_FLAGS_DEBUG} -O0 -DDEBUG -g")
 set(CMAKE_C_FLAGS_RELEASE           "${CMAKE_C_FLAGS_RELEASE}")
 
-
-# Set the compiler flags
 set(CMAKE_CXX_FLAGS                 "${CMAKE_CXX_FLAGS} -Wall -Wextra")
-set(CMAKE_CXX_FLAGS_DEBUG           "${CMAKE_CXX_FLAGS_DEBUG} -O0 -DDEBUG")
+set(CMAKE_CXX_FLAGS_DEBUG           "${CMAKE_CXX_FLAGS_DEBUG} -O0 -DDEBUG -g")
 set(CMAKE_CXX_FLAGS_RELEASE         "${CMAKE_CXX_FLAGS_RELEASE}")
 
-# Target definition
+#
+# MARK: - Targets
+#
+
+# Target Definition
 set(TARGET "gosdt")
+set(TARGET_TESTS "${TARGET}_tests")
 
 # Target: GOSDT
 # Define the list of source files used to compile the target
 file(GLOB_RECURSE SOURCE_FILES gosdt/*.cpp)
-add_executable(${TARGET} ${SOURCE_FILES} include/json/json.hpp include/matrix/matrix.hpp)
+add_executable(${TARGET} ${SOURCE_FILES})
 target_include_directories(${TARGET} PUBLIC ${CMAKE_SOURCE_DIR}/include)
 
-## Dependencies: Intel TBB
-#find_package(TBB REQUIRED)
-#target_link_libraries(${TARGET} PRIVATE TBB::tbb)
-#target_link_libraries(${TARGET} PRIVATE TBB::tbbmalloc)
-#target_link_libraries(${TARGET_TESTS} PRIVATE TBB::tbb)
-#target_link_libraries(${TARGET_TESTS} PRIVATE TBB::tbbmalloc)
+# Target: GOSDT Tests
+set(SOURCE_FILES_TESTS ${SOURCE_FILES} gosdt_test/test.cpp)
+list(REMOVE_ITEM SOURCE_FILES_TESTS "${CMAKE_SOURCE_DIR}/gosdt/main.cpp")
+list(INSERT SOURCE_FILES_TESTS 0 "${CMAKE_SOURCE_DIR}/gosdt_test/test.cpp")
+add_executable(${TARGET_TESTS} ${SOURCE_FILES_TESTS})
+target_include_directories(${TARGET_TESTS} PUBLIC ${CMAKE_SOURCE_DIR}/include)
+
+message(STATUS "SRC MAIN: ${SOURCE_FILES}")
+message(STATUS "SRC TEST: ${SOURCE_FILES_TESTS}")
+
 #
-## Dependencies: Boost
-#set(Boost_USE_STATIC_LIBS OFF)
-#set(Boost_USE_MULTITHREADED ON)
-#set(Boost_USE_STATIC_RUNTIME OFF)
-#find_package(Boost 1.45.0 COMPONENTS numeric)
+# MARK: - Dependencies
 #
-#if(Boost_FOUND)
-#    target_include_directories(${TARGET} PRIVATE ${Boost_INCLUDE_DIRS})
-#    target_link_libraries(${TARGET} PRIVATE ${Boost_LIBRARIES})
-#    target_include_directories(${TARGET_TESTS} PRIVATE ${Boost_INCLUDE_DIRS})
-#    target_link_libraries(${TARGET_TESTS} PRIVATE ${Boost_LIBRARIES})
-#    message("Found the boost library.")
-#endif()
 
 # Dependencies: GMP
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(GMP REQUIRED IMPORTED_TARGET gmp)
 target_link_libraries(${TARGET} PRIVATE PkgConfig::GMP)
 target_include_directories(${TARGET} PRIVATE ${GMP_INCLUDE_DIRS})
+target_link_libraries(${TARGET_TESTS} PRIVATE PkgConfig::GMP)
+target_include_directories(${TARGET_TESTS} PRIVATE ${GMP_INCLUDE_DIRS})
 
 # Dependencies: rapidcsv
 include(FetchContent)
@@ -60,6 +60,4 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(rapidcsv)
 target_link_libraries(${TARGET} PUBLIC rapidcsv)
-
-
-
+target_link_libraries(${TARGET_TEST} rapidcsv)
