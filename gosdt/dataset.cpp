@@ -64,14 +64,14 @@ namespace gosdt {
             eqp_loss += mismatch_costs[t] * buffer.count();
         }
 
-    auto lower_bound = eqp_loss;
-
         auto min_loss = eqp_loss;
         if (min_loss > max_loss)
             min_loss = max_loss;
 
         DVOUT << "Lower Bound: " << min_loss << std::endl
                 << "Upper Bound: " << max_loss << std::endl
+                << "Max Cost Reduction: " << max_cost_reduction << std::endl
+                << "Cost Minimizing Target: " << cost_minimizer << std::endl;
         // Returning {min_loss, max_loss, max_cost_reduction, cost_minimizer}
         return {min_loss, max_loss, max_cost_reduction, cost_minimizer};
     }
