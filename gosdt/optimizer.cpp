@@ -1,6 +1,7 @@
 #include "optimizer.hpp"
+#include "utilities/logging.hpp"
 
-namespace GOSDT {
+namespace gosdt {
 
     Optimizer::Optimizer(const Dataset &dataset, const Config &config)
     : config(config), dataset(dataset)
@@ -9,22 +10,28 @@ namespace GOSDT {
     }
 
     Optimizer::Result
-    GOSDT::Optimizer::optimize()
+    Optimizer::optimize()
     {
-        std::cout << "[Optimizer::optimize] Starting Optimization\n";
+        DOUT << "[Optimizer::optimize] Starting Optimization\n";
         queue.emplace(root, Message::Priority::ZERO);
-        graph.find_or_create(root, {}, *this);
+        auto root_node = graph.find_or_create(root, {}, *this);
 
-        while (global_upper_bound > global_lower_bound)
+        auto i = 0;
+        while (root_node.upper_bound > root_node.lower_bound && !queue.empty())
         {
+            if (i % 500 == 0) {
+                DOUT << "[Optimizer::optimize] [ITERATION, QUEUE_SIZE, GRAPH_SIZE]: [" << i
+                     << ", " << queue.size() << ", " << graph.node_set.size() << "]\n";
+            }
+            i++;
             auto message = queue.top();
             queue.pop();
             // TODO This requires that message.bitset exists.
             auto& node = graph.find(message.bitset);
 
             if (node.lower_bound == node.upper_bound) continue;
-            f32 lower_bound_prime = -std::numeric_limits<f32>::max();
-            f32 upper_bound_prime = std::numeric_limits<f32>::max();
+            u64 lower_bound_prime = 0;
+            u64 upper_bound_prime = std::numeric_limits<u64>::max();
             for (usize feature = 0; feature < dataset.n_columns; feature++)
             {
                 auto [left_id, right_id]
@@ -79,7 +86,10 @@ namespace GOSDT {
             }
         }
 
-        std::cout << "[Optimizer::optimize] Completed optimization\n";
+        DOUT << "[Optimizer::optimize] Completed optimization\n";
+        DOUT << "[Optimizer::optimize] [ITERATION, QUEUE_SIZE, GRAPH_SIZE]: [" << i
+             << ", " << queue.size() << ", " << graph.node_set.size() << "]\n";
+
         return {
             .time = 0.0,
             .iterations = 0,
@@ -91,7 +101,7 @@ namespace GOSDT {
     std::pair<Bitset, Bitset>
     Optimizer::split_bitset(usize feature_index, const Bitset &capture_set)
     {
-        std::cout << "[Optimizer::split_bitset] splitting bitsexxt on feature index\n";
+        DVOUT << "[Optimizer::split_bitset] splitting bitset on feature index: " << feature_index << std::endl;
         Bitset left = Bitset::bit_and(
             dataset.features[feature_index],
             capture_set,
@@ -104,9 +114,8 @@ namespace GOSDT {
         return {std::move(left), std::move(right)};
     }
 
-    std::tuple<f32, f32, f32, usize>
+    std::tuple<u64, u64, u64, usize>
     Optimizer::calculate_bounds(const Bitset& capture_set) const{
-        // TODO better error reporting.
         return dataset.calculate_bounds(capture_set);
     }
 

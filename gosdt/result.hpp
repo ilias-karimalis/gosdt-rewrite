@@ -1,17 +1,15 @@
-#ifndef GOSDT_REWRITE_RESULT_HPP
-#define GOSDT_REWRITE_RESULT_HPP
+#pragma once
 
 #include <unordered_set>
 
 #include <json/json.hpp>
 
-#include "utils.hpp"
-
+#include "utilities/numeric_types.hpp"
 #include "model.hpp"
 
 
 
-namespace GOSDT {
+namespace gosdt {
 
     struct Result {
         // Elapsed time in seconds
@@ -32,5 +30,3 @@ namespace GOSDT {
     };
 
 }
-
-#endif //GOSDT_REWRITE_RESULT_HPP

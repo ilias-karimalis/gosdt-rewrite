@@ -7,12 +7,10 @@
 
 #include "bitset.hpp"
 #include "encoder.hpp"
+#include "config.hpp"
 
-namespace GOSDT {
+namespace gosdt {
 
-    /*
-     *
-     */
     struct Dataset {
 
         // TODO as far as I can tell rows is only used in the creation of
@@ -20,13 +18,16 @@ namespace GOSDT {
         //      incomplete image though because perhaps encoder.binary_rows is
         //      needed somewhere else that's to be seen, keeping it for now.
 
+        /// Configuration
+        const Config& config;
+
         /// Row view of the dataset in binary representation
         std::vector<Bitset> rows;
         /// Column view of the dataset in binary representation
         std::vector<Bitset> features;
         /// Column view of the original target column in binary representation
         std::vector<Bitset> targets;
-        /// TODO
+        /// TODO what is this??
         Bitset majority;
 
         usize n_rows;       ///< Number of rows in the Dataset
@@ -36,15 +37,15 @@ namespace GOSDT {
         // SECTION: Cost Matrices for different types of mis-prediction
         // NOTE: not sure if all of these are actually needed so I'll avoid
         //       writing these for now.
-        Matrix<f32> costs;
-        std::vector<f32> diff_costs;
-        std::vector<f32> match_costs;
-        std::vector<f32> mismatch_costs;
+        Matrix<u64> costs;
+        std::vector<u64> diff_costs;
+        std::vector<u64> match_costs;
+        std::vector<u64> mismatch_costs;
 
-        explicit Dataset(std::istream & input_stream);
+        Dataset(std::istream & input_stream, const Config& configuration);
         ~Dataset() = default;
 
-        std::tuple<f32, f32, f32, usize>
+        [[nodiscard]] std::tuple<u64, u64, u64, usize>
         calculate_bounds(const Bitset& capture_set) const;
 
         // Helper functions for the ctor.

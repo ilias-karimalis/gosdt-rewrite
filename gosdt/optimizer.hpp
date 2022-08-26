@@ -2,7 +2,7 @@
 
 #include <queue>
 
-#include "utils.hpp"
+#include "utilities/numeric_types.hpp"
 #include "model.hpp"
 #include "bitset.hpp"
 #include "config.hpp"
@@ -10,7 +10,7 @@
 #include "message.hpp"
 #include "graph.hpp"
 
-namespace GOSDT {
+namespace gosdt {
 
     struct Optimizer {
 
@@ -41,7 +41,7 @@ namespace GOSDT {
         std::pair<Bitset, Bitset>
         split_bitset(usize feature_index, const Bitset & capture_set);
 
-        [[nodiscard]] std::tuple<f32, f32, f32, usize>
+        [[nodiscard]] std::tuple<u64, u64, u64, usize>
         calculate_bounds(const Bitset& capture_set) const;
 
     };

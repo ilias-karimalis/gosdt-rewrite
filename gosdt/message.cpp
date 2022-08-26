@@ -1,6 +1,6 @@
 #include "message.hpp"
 
-namespace GOSDT {
+namespace gosdt {
 
     Message::Message(Bitset bitset, Message::Priority priority)
     : bitset(std::move(bitset)), priority(priority)

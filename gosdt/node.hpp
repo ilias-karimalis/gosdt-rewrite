@@ -4,7 +4,7 @@
 
 #include "bitset.hpp"
 
-namespace GOSDT {
+namespace gosdt {
 
     struct Optimizer;
 
@@ -13,15 +13,15 @@ namespace GOSDT {
         Bitset capture_set;
         std::vector<Node *> parents;
 
-        f32 upper_bound;
-        f32 lower_bound;
+        u64 upper_bound;
+        u64 lower_bound;
 
-        std::optional<f32> max_cost_reduction;
+        std::optional<u64> max_cost_reduction;
         std::optional<usize> cost_minimizer;
 
         // This should only be used for the
         Node();
-        Node(Bitset capture_set, f32 ub, f32 lb, f32 mcr, usize cm, Node * parent);
+        Node(Bitset capture_set, Node * parent);
 
         friend bool operator==(const Node& lhs, const Node& rhs)
         {

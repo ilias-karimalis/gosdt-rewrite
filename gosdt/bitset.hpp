@@ -5,9 +5,9 @@
 
 #include <gmp.h>
 
-#include "utils.hpp"
+#include "utilities/numeric_types.hpp"
 
-namespace GOSDT {
+namespace gosdt {
 
     struct Bitset {
         // Not Portable. Requires that each 1 byte == 8 bits
@@ -65,13 +65,19 @@ namespace GOSDT {
 namespace std {
 
     template<>
-    struct hash<GOSDT::Bitset> {
+    struct hash<gosdt::Bitset> {
 
         size_t
-        operator()(const GOSDT::Bitset& bitset) const
+        operator()(const gosdt::Bitset& bitset) const
         {
             // TODO: calculate the hash value of this bitset
-            return 0;
+            size_t hash = bitset.size;
+
+            for (mp_size_t i = 0; i < bitset.n_blocks; i++)
+            {
+                hash ^= bitset.data[i] + 0x9E3779B9 + (hash << 6) + (hash >> 2);
+            }
+            return hash;
         }
 
     };

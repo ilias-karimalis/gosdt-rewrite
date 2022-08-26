@@ -1,19 +1,15 @@
-#ifndef GOSDT_REWRITE_GOSDT_HPP
-#define GOSDT_REWRITE_GOSDT_HPP
+#pragma once
 
 #include <filesystem>
 
-#include "utils.hpp"
-
+#include "utilities/numeric_types.hpp"
 #include "result.hpp"
 #include "config.hpp"
 
-
-namespace GOSDT {
+namespace gosdt {
 
     Result
     run_from_path(Config config, const std::filesystem::path& dataset_path);
 
 };
 
-#endif //GOSDT_REWRITE_GOSDT_HPP

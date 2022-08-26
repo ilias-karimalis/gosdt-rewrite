@@ -5,7 +5,7 @@
 #include "bitset.hpp"
 #include "node.hpp"
 
-namespace GOSDT {
+namespace gosdt {
 
     // Pre declaration of Optimizer;
     struct Optimizer;
@@ -23,7 +23,7 @@ namespace GOSDT {
         find_or_create(Bitset identifier, Node* parent, const Optimizer& optimizer);
 
         bool
-        contains(const Bitset& identifier);
+        contains(const Bitset& identifier) const;
 
         Node&
         find(const Bitset& identifier);

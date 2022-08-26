@@ -8,10 +8,10 @@
 
 #include <csv/csv.h>
 #include <matrix/matrix.hpp>
-#include "utils.hpp"
+#include "utilities/numeric_types.hpp"
 #include "bitset.hpp"
 
-namespace GOSDT {
+namespace gosdt {
 
     struct Encoder {
 
@@ -24,6 +24,8 @@ namespace GOSDT {
             NULL_TYPE,
             UNDEFINED,
         };
+
+        friend std::ostream &operator<<(std::ostream &os, Type type);
 
         enum class Relation {
             GEQ,    // >=
@@ -41,7 +43,7 @@ namespace GOSDT {
         std::vector<std::vector<std::string>> tokens;
 
         usize n_rows;       ///< number of rows in the dataset
-        usize n_columns;    ///< number of columns in the PRE-binarized dataset
+        usize n_columns;    ///< number of columns in the PRE-binarized dataset (Including Target column)
         usize n_targets;    ///< number of classes in the PRE-binarized dataset
 
         std::vector<std::set<std::string>> values_per_column;
@@ -58,7 +60,7 @@ namespace GOSDT {
 
         std::vector<Bitset> binary_rows;
 
-        usize n_binary_columns; ///< number of columns in the binarized dataset
+        usize n_binary_columns; ///< number of columns in the binarized dataset (Discarding Target columns)
         usize n_binary_targets; ///< number of target columns in the binarized dataset
     };
 

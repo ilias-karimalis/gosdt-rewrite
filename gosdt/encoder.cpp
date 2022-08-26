@@ -1,15 +1,17 @@
 #include "encoder.hpp"
+#include "utilities/logging.hpp"
 
 #include <cstdlib>
 
-namespace GOSDT {
+namespace gosdt {
 
     const std::regex Encoder::integral_regex(R"(^[+-]?\d+$)");
     const std::regex Encoder::rational_regex(R"(^[+-]?\d+\.\d*$)");
 
     Encoder::Encoder(std::istream &input_stream)
     {
-        std::cout << "[Encoder::Encoder] Tokenizing csv data file\n";
+        DOUT << Type::RATIONAL << std::endl;
+        DVOUT << "[Encoder::Encoder] Tokenizing csv data file\n";
         static const char CSV_SEPARATOR = ',';
 
         // Tokenize the csv input.
@@ -27,7 +29,7 @@ namespace GOSDT {
             n_columns = header.size();
         }
         // TODO Figure out a better error reporting system rather than just using asserts.
-        assert(n_columns > 0);
+        DASSERT(n_columns > 0);
 
         // Tokenize the rest of the csv file
         n_rows = 0;
@@ -40,14 +42,14 @@ namespace GOSDT {
                 std::getline(row_stream, token, CSV_SEPARATOR);
                 row.push_back(token);
             }
-            assert(row.size() == n_columns);
+            DASSERT(row.size() == n_columns);
 
             tokens.push_back(row);
             n_rows += 1;
         }
 
         // Parse the Tokenized CSV input
-        std::cout << "[Encoder::Encoder] Determining the cell types of the dataset\n";
+        DVOUT << "[Encoder::Encoder] Determining the cell types of the dataset\n";
         values_per_column.resize(n_columns);
         type_per_column.resize(n_columns, Type::UNDEFINED);
 
@@ -92,7 +94,7 @@ namespace GOSDT {
         }
 
         // We can do further type specification based on column statistics
-        std::cout << "[Encoder::Encoder] Performing further type specification based on column statistics\n";
+        DVOUT << "[Encoder::Encoder] Performing further type specification based on column statistics\n";
         for (usize j = 0; j < n_columns; j++) {
             auto cardinality = values_per_column[j].size();
             // There's only 1 type in this feature so it's useless for
@@ -108,14 +110,16 @@ namespace GOSDT {
                 type_per_column[j] = Type::BINARY;
             }
         }
-
         // We set the target column as Categorical so that we ensure equality
         // constraints.
         type_per_column[n_columns - 1] = Type::CATEGORICAL;
         // At this point we can also count how many classes this categorical
         // type has.
         n_targets = values_per_column[n_columns - 1].size();
-        std::cout << "[Encoder::Encoder] Constructing the set of encoding rules\n";
+        DOUT << "[Encoder::Encoder] [nRows, nColumns, nTargets]: [" << n_rows << ", " << n_columns-1 << ", " << n_targets << "]\n";
+
+
+        DVOUT << "[Encoder::Encoder] Constructing the set of encoding rules\n";
         std::vector<std::tuple<usize, Type, Relation, std::string>> codex;
         for (usize i = 0; i < n_columns; i++)
         {
@@ -126,7 +130,7 @@ namespace GOSDT {
             switch (type)
             {
                 case Type::BINARY:
-                    assert(value_set.size() == 2);
+                    DASSERT(value_set.size() == 2);
                     codex.emplace_back(i, Type::BINARY, Relation::EQ, *value_set.begin());
                     break;
 
@@ -167,8 +171,12 @@ namespace GOSDT {
             }
         }
         n_binary_columns = codex.size() - n_binary_targets;
+        for (auto& [i, type, relation, str_value] : codex)
+        {
+            DOUT << "Feature: " << i << " Type: " << type << " Value: " << str_value << std::endl;
+        }
 
-        std::cout << "[Encoder::Encoder] Encoding the tokenized data using codex\n";
+        DVOUT << "[Encoder::Encoder] Encoding the tokenized data using codex\n";
         for (usize i = 0; i < n_rows; i++)
         {
             // This is a place where we wish this wasn't filled.
@@ -197,6 +205,23 @@ namespace GOSDT {
             }
             binary_rows.push_back(std::move(row));
         }
+
+        DOUT << "[Encoder::Encoder] [nRows, nBinaryColumns, nBinaryTargets]: [" << n_rows << ", " << n_binary_columns << ", " << n_binary_targets << "]\n";
+
     }
+
+    std::ostream & operator<<(std::ostream &os, Encoder::Type type) {
+        switch (type) {
+            case Encoder::Type::RATIONAL: os << "Rational"; break;
+            case Encoder::Type::INTEGRAL: os << "Integral"; break;
+            case Encoder::Type::BINARY: os << "Binary"; break;
+            case Encoder::Type::CATEGORICAL: os << "Categorical"; break;
+            case Encoder::Type::REDUNDANT: os << "Redundant"; break;
+            case Encoder::Type::NULL_TYPE: os << "Null"; break;
+            case Encoder::Type::UNDEFINED: os << "Undefined"; break;
+        }
+        return os;
+    }
+
 
 }

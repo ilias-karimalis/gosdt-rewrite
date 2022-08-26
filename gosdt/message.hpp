@@ -1,9 +1,8 @@
-#ifndef GOSDT_REWRITE_MESSAGE_HPP
-#define GOSDT_REWRITE_MESSAGE_HPP
+#pragma once
 
 #include "bitset.hpp"
 
-namespace GOSDT {
+namespace gosdt {
 
     struct Message {
 
@@ -22,5 +21,3 @@ namespace GOSDT {
     };
 
 }
-
-#endif //GOSDT_REWRITE_MESSAGE_HPP

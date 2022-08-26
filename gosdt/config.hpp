@@ -1,15 +1,14 @@
-#ifndef GOSDT_REWRITE_CONFIG_HPP
-#define GOSDT_REWRITE_CONFIG_HPP
+#pragma once
 
 #include <optional>
 #include <unordered_set>
 
 #include <json/json.hpp>
 
-#include "utils.hpp"
+#include "utilities/numeric_types.hpp"
 
 
-namespace GOSDT {
+namespace gosdt {
 
     struct Config {
 
@@ -20,6 +19,8 @@ namespace GOSDT {
         std::optional<u8> max_height;
         u32 time_limit;
 
+        u64 regularization;
+
 
         /// Config functions
         static Config configure_from_stream(std::istream &stream_config);
@@ -27,5 +28,3 @@ namespace GOSDT {
     };
 
 }
-
-#endif //GOSDT_REWRITE_CONFIG_HPP

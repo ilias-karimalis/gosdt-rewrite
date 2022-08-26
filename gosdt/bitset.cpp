@@ -1,8 +1,9 @@
 #include "bitset.hpp"
+#include "utilities/logging.hpp"
 
 #include <iostream>
 
-namespace GOSDT {
+namespace gosdt {
 
     Bitset::Bitset()
     : data(nullptr), n_blocks(0), size(0), n_bits_used_last_block(0)
@@ -143,8 +144,7 @@ namespace GOSDT {
     Bitset
     Bitset::bit_and(Bitset const& b1, Bitset const& b2, bool flip)
     {
-        std::cout << b1.size << " " << b2.size << std::endl;
-        assert(b1.size == b2.size);
+        DASSERT(b1.size == b2.size);
 
         auto ret_val = Bitset(b1.size, true);
         if (!flip) {
@@ -163,8 +163,15 @@ namespace GOSDT {
     }
 
     usize Bitset::scan(usize first, bool value) {
-        // TODO Bitset::scan
-        return 0;
+        DASSERT(first < size);
+        for (usize i = first; i < size; i++)
+        {
+            if (get(i) == value) {
+                return i;
+            }
+        }
+        // TODO find a better failure return value
+        return size;
     }
 
 

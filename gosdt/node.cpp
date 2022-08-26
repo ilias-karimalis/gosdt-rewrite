@@ -1,16 +1,18 @@
 #include "node.hpp"
 
-namespace GOSDT {
+namespace gosdt {
 
     Node::Node()
-    : upper_bound(std::numeric_limits<f32>::max()), lower_bound(-std::numeric_limits<f32>::max())
+    : upper_bound(std::numeric_limits<u64>::max()), lower_bound(0)
     {}
 
-    Node::Node(Bitset capture_set, f32 ub, f32 lb, f32 mcr, usize cm, Node *parent)
-    : capture_set(std::move(capture_set)), upper_bound(ub), lower_bound(lb), max_cost_reduction(mcr),
-    cost_minimizer(cm)
+    Node::Node(Bitset capture_set, Node *parent)
+    : capture_set(std::move(capture_set))
     {
         if (parent != nullptr)
             parents.push_back(parent);
+
+        upper_bound = std::numeric_limits<u64>::max();
+        lower_bound = 0;
     }
 }
