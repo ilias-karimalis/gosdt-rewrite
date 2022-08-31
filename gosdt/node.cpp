@@ -6,11 +6,11 @@ namespace gosdt {
     : upper_bound(std::numeric_limits<u64>::max()), lower_bound(0)
     {}
 
-    Node::Node(Bitset capture_set, Node *parent)
-    : capture_set(std::move(capture_set))
+    Node::Node(const Bitset* parent)
     {
-        if (parent != nullptr)
+        if (parent != nullptr) {
             parents.push_back(parent);
+        }
 
         upper_bound = std::numeric_limits<u64>::max();
         lower_bound = 0;

@@ -2,8 +2,6 @@
 #include <sys/resource.h>
 #include <sys/time.h>
 
-#include <json/json.hpp>
-
 #include "gosdt.hpp"
 #include "dataset.hpp"
 #include "optimizer.hpp"
@@ -19,7 +17,6 @@ namespace gosdt {
         // START resource usage statistics and timing
         static struct rusage usage_start, usage_end;
         if (getrusage(RUSAGE_SELF, &usage_start)) {}
-        auto start = std::chrono::high_resolution_clock::now();
 
         // Load the dataset
         auto dataset_stream = std::ifstream(dataset_path);
@@ -29,17 +26,17 @@ namespace gosdt {
         auto optimizer = Optimizer(dataset, config);
 
         // Perform the optimization
-        auto optimizer_result = optimizer.optimize();
+        auto optimization_result = optimizer.optimize();
+        auto extraction_result = optimizer.extract();
 
-        auto end = std::chrono::high_resolution_clock::now();
-
-        result.model_loss = optimizer_result.model_loss;
-        result.iterations = optimizer_result.iterations;
-        result.models = optimizer_result.models;
+        result.upper_bound = optimization_result.upper_bound;
+        result.lower_bound = optimization_result.lower_bound;
+        result.iterations = optimization_result.iterations;
+        result.size = optimization_result.graph_size;
+        result.models = extraction_result.models;
+        result.time = optimization_result.time;
 
         // END resource usage statistics and timing
-        result.time =
-            std::chrono::duration_cast<std::chrono::seconds>(end - start).count();
         getrusage(RUSAGE_SELF, &usage_end);
         struct timeval delta{};
         timersub(&usage_end.ru_utime, &usage_start.ru_utime, &delta);

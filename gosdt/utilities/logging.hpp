@@ -8,8 +8,9 @@
 #include <ostream>
 #include <cassert>
 
-// We want to define the _DEBUG flag if it's not defined
-#define _DEBUG
+//#define _DEBUG_VERBOSE
+//#define _DEBUG
+
 
 #ifdef _DEBUG_VERBOSE
     #ifndef _DEBUG

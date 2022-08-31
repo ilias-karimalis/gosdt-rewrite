@@ -11,13 +11,15 @@ namespace gosdt {
 
 #define CONFIGURE(JSON, CONFIG, X) if ((JSON).contains(#X)) { (CONFIG).X = (JSON)[#X]; }
 
-
     Config Config::configure_from_json(json json_config) {
         Config config;
-        CONFIGURE(json_config, config, uncertainty_tolerance)
-        CONFIGURE(json_config, config, time_limit)
-        CONFIGURE(json_config, config, max_height)
+        CONFIGURE(json_config, config, optimality_gap)
         CONFIGURE(json_config, config, regularization)
+
+        CONFIGURE(json_config, config, time_limit)
+        CONFIGURE(json_config, config, model_limit)
+
+        CONFIGURE(json_config, config, max_height)
 
         return config;
     }

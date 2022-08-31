@@ -1,14 +1,16 @@
 #pragma once
 
-#include <queue>
+#include <unordered_map>
 
 #include "utilities/numeric_types.hpp"
+
 #include "model.hpp"
 #include "bitset.hpp"
+#include "node.hpp"
 #include "config.hpp"
 #include "dataset.hpp"
 #include "message.hpp"
-#include "graph.hpp"
+#include "queue.hpp"
 
 namespace gosdt {
 
@@ -26,23 +28,37 @@ namespace gosdt {
         const Config& config;
         const Dataset& dataset;
 
-        // TODO the graph and queue have not been implemented yet.
-        Graph graph;
-        std::priority_queue<Message, std::vector<Message>, std::greater<>> queue;
+        // When we go multithreaded these are the things that need to be protected
+        Queue queue;
+        std::unordered_map<Bitset, Node, std::hash<Bitset>> graph;
+        u64 global_lower_bound = 0;
+        u64 global_upper_bound = std::numeric_limits<u64>::max();
 
-        std::optional<f32> global_lower_bound;
-        std::optional<f32> global_upper_bound;
+        std::vector<Bitset> bitset_storage;
+        std::vector<Node> node_storage;
+
+        // Statistics produced by optimizing
+        struct OptimizationStatistics {
+            u64 time;
+            u32 iterations;
+            u64 upper_bound;
+            u64 lower_bound;
+            u64 graph_size;
+        };
 
         Optimizer(const Dataset& dataset, const Config& config);
 
-        Result
+        OptimizationStatistics
         optimize();
 
-        std::pair<Bitset, Bitset>
+        Result
+        extract();
+
+        void
         split_bitset(usize feature_index, const Bitset & capture_set);
 
-        [[nodiscard]] std::tuple<u64, u64, u64, usize>
-        calculate_bounds(const Bitset& capture_set) const;
+        std::pair<const Bitset, Node>&
+        find_or_create(Bitset id, const Bitset* parent);
 
     };
 

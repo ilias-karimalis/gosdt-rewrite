@@ -1,11 +1,11 @@
 #pragma once
 
-#include <optional>
 #include <unordered_set>
 
 #include <json/json.hpp>
 
 #include "utilities/numeric_types.hpp"
+#include "utilities/optional.hpp"
 
 
 namespace gosdt {
@@ -15,11 +15,20 @@ namespace gosdt {
         using json = nlohmann::json;
 
         /// Config struct members
-        f32 uncertainty_tolerance;
-        std::optional<u8> max_height;
-        u32 time_limit;
 
-        u64 regularization;
+        /// The maximum allowed global optimality gap allowed before the optimization can terminate
+        u64 optimality_gap = 0;
+        /// The penalty incurred for each leaf in the model
+        u64 regularization = 10;
+
+        /// The maximum allowed runtime (seconds)
+        opt<u32> time_limit = std::nullopt;
+        /// The maximum number of models extracted
+        opt<u32> model_limit = std::nullopt;
+
+        /// The maximum tree depth for solutions
+        opt<u8> max_height = std::nullopt;
+
 
 
         /// Config functions

@@ -1,13 +1,26 @@
 #include "bitset.hpp"
 #include "utilities/logging.hpp"
 
-#include <iostream>
-
 namespace gosdt {
 
     Bitset::Bitset()
     : data(nullptr), n_blocks(0), size(0), n_bits_used_last_block(0)
     {}
+
+    Bitset::Bitset(usize size)
+    : size(size)
+    {
+        n_bits_used_last_block = size & BITS_PER_BLOCK;
+        if (size == 0) {
+            n_blocks = 0;
+            data = nullptr;
+            return;
+        }
+
+        n_blocks = (mp_size_t)(size / BITS_PER_BLOCK);
+        n_blocks += n_bits_used_last_block != 0;
+        data = new usize[n_blocks];
+    }
 
     Bitset::Bitset(usize size, bool fill)
     : size(size)
@@ -18,11 +31,11 @@ namespace gosdt {
             n_blocks = 0;
             data = nullptr;
             return;
-        } else {
-            n_blocks = (long)(size / BITS_PER_BLOCK);
-            // Add extra block that is lost to integer division above
-            n_blocks += n_bits_used_last_block != 0;
         }
+
+        n_blocks = (mp_size_t)(size / BITS_PER_BLOCK);
+        // Add extra block that is lost to integer division above
+        n_blocks += n_bits_used_last_block != 0;
         // TODO For now we're using the default c++ allocator, but this might
         //      need to be changed in the future. Our default implementation
         //      used a tbb::scalable_allocator<usize>, it might make sense to
@@ -41,6 +54,28 @@ namespace gosdt {
             data[n_blocks - 1] &= mask;
 
         } else {
+            for (auto i = 0; i < n_blocks; ++i)
+            {
+                data[i] = 0;
+            }
+        }
+    }
+
+    Bitset::Bitset(usize size, usize *data, bool fill)
+    : data(data), size(size)
+    {
+        n_bits_used_last_block = size % BITS_PER_BLOCK;
+        n_blocks = (mp_size_t)(size / BITS_PER_BLOCK);
+        n_blocks += n_bits_used_last_block != 0;
+
+        if (fill) {
+            for (auto i = 0; i < n_blocks; ++i)
+            {
+                data[i] = ~((usize) 0);
+            }
+            auto mask = ~((usize)0) >> (BITS_PER_BLOCK  - n_bits_used_last_block);
+            data[n_blocks-1] &= mask;
+        }  else {
             for (auto i = 0; i < n_blocks; ++i)
             {
                 data[i] = 0;
@@ -75,6 +110,7 @@ namespace gosdt {
 
     Bitset::~Bitset()
     {
+        if (data == nullptr) return;
         delete[] data;
     }
 
@@ -141,19 +177,39 @@ namespace gosdt {
         return mpn_popcount(data, n_blocks);
     }
 
-    Bitset
-    Bitset::bit_and(Bitset const& b1, Bitset const& b2, bool flip)
-    {
-        DASSERT(b1.size == b2.size);
+//    Bitset
+//    Bitset::bit_and(Bitset const& b1, Bitset const& b2, bool flip)
+//    {
+//        DASSERT(b1.size == b2.size);
+//
+//        auto ret_val = Bitset(b1.size, true);
+//        if (!flip) {
+//            mpn_and_n(ret_val.data, b1.data, b2.data, ret_val.n_blocks);
+//        } else {
+//            mpn_nior_n(ret_val.data, b2.data, b2.data, ret_val.n_blocks);
+//            mpn_nior_n(ret_val.data, b1.data, ret_val.data, ret_val.n_blocks);
+//        }
+//        // Clean the last block to only keep bits that are in use
+//        auto mask = ~(usize)0 >> (BITS_PER_BLOCK - ret_val.n_bits_used_last_block);
+//        ret_val.data[ret_val.n_blocks - 1] &= mask;
+//
+//        return ret_val;
+//    }
 
-        auto ret_val = Bitset(b1.size, true);
+    void
+    Bitset::bit_and(const Bitset &b1, const Bitset &b2, Bitset &out, bool flip)
+    {
+        DASSERT(b1.size == b2.size && b2.size == out.size);
         if (!flip) {
-            mpn_and_n(ret_val.data, b1.data, b2.data, ret_val.n_blocks);
+            mpn_and_n(out.data, b1.data, b2.data, out.n_blocks);
         } else {
-            mpn_nior_n(ret_val.data, b2.data, b2.data, ret_val.n_blocks);
-            mpn_nior_n(ret_val.data, b1.data, ret_val.data, ret_val.n_blocks);
+            mpn_nior_n(out.data, b2.data, b2.data, out.n_blocks);
+            mpn_nior_n(out.data, b1.data, out.data, out.n_blocks);
         }
-        return ret_val;
+
+        // TODO we need to figure out if we need to mask!
+        //      as far as I can tell we don't need to mask out.
+        out.data[out.n_blocks - 1] &= ~(usize)0 >> (BITS_PER_BLOCK -out.n_bits_used_last_block);
     }
 
     bool
@@ -183,10 +239,7 @@ namespace gosdt {
         ret &= left.n_bits_used_last_block == right.n_bits_used_last_block;
         if (!ret) return ret;
 
-        for (mp_size_t i = 0; i < left.n_blocks; i++) {
-            ret &= left.data[i] == right.data[i];
-        }
-        return ret;
+        return mpn_cmp(left.data, right.data, left.n_blocks) == 0;
     }
 
 }

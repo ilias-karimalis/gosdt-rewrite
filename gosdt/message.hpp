@@ -16,8 +16,6 @@ namespace gosdt {
 
         Message(Bitset bitset, Priority priority);
 
-        friend bool operator>(const Message& lhs, const Message& rhs);
-
     };
 
 }

@@ -13,12 +13,12 @@ namespace gosdt {
 
     struct Result {
         // Elapsed time in seconds
-        f64 time;
+        u64 time;
         u32 size;
         u32 iterations;
-        f32 lower_bound;
-        f32 upper_bound;
-        f32 model_loss;
+        u64 lower_bound;
+        u64 upper_bound;
+        u64 model_loss;
 
         f32 ru_utime;
         f32 ru_stime;
@@ -27,6 +27,7 @@ namespace gosdt {
         usize ru_nivcw;
 
         std::vector<Model> models;
+
     };
 
 }

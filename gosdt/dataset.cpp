@@ -21,10 +21,13 @@ namespace gosdt {
     {
         DVOUT << "[Dataset::calculate_bounds] Computing Bounds for Capture Set\n";
         // Compute the distribution of each of the target values in what is captured by the capture_set
+        auto work_buffer = Bitset(capture_set.size);
         std::vector<u32> distribution(n_targets);
         for (usize t = 0; t < n_targets; t++)
         {
-            distribution[t] = Bitset::bit_and(targets[t], capture_set).count();
+            // z_u-, z_u+ is distribution!
+            Bitset::bit_and(targets[t], capture_set, work_buffer, false);
+            distribution[t] = work_buffer.count();
         }
 
         DVOUT << "[Dataset::calculate_bounds] Computing the Upper Bound of a Capture Set\n";
@@ -38,6 +41,7 @@ namespace gosdt {
             u64 cost = 0;
             for (auto j = 0u; j < n_targets; j++)
             {
+                // One of these will be 0 when i == j
                 cost += costs(i, j) * distribution[j];
             }
             // Track the prediction that minimizes cost
@@ -45,6 +49,7 @@ namespace gosdt {
                 max_loss = cost;
                 cost_minimizer = i;
             }
+            // Max loss is the min(...) in GOSDT Equation 10 (scaled by N/lambda)
         }
 
         DVOUT << "[Dataset::calculate_bounds] Computing the Lower Bound of a Capture Set\n";
@@ -54,22 +59,22 @@ namespace gosdt {
         {
             max_cost_reduction += diff_costs[t] * distribution[t];
             // Captured majority points
-            auto buffer = Bitset::bit_and(majority, capture_set, false);
-            buffer = Bitset::bit_and(targets[t], buffer);
-            eqp_loss += match_costs[t] * buffer.count();
+            Bitset::bit_and(majority, capture_set, work_buffer, false);
+            Bitset::bit_and(targets[t], work_buffer, work_buffer, false);
+            eqp_loss += match_costs[t] * work_buffer.count();
 
             // Captured minority points
-            buffer = Bitset::bit_and(majority, capture_set, true);
-            buffer = Bitset::bit_and(targets[t], buffer);
-            eqp_loss += mismatch_costs[t] * buffer.count();
+            Bitset::bit_and(majority, capture_set, work_buffer, true);
+            Bitset::bit_and(targets[t], work_buffer, work_buffer, false);
+            eqp_loss += mismatch_costs[t] * work_buffer.count();
         }
 
         auto min_loss = eqp_loss;
         if (min_loss > max_loss)
             min_loss = max_loss;
 
-        DVOUT << "Lower Bound: " << min_loss << std::endl
-                << "Upper Bound: " << max_loss << std::endl
+        DVOUT << "[Dataset::calculate_bounds] Min Loss: " << min_loss << std::endl
+                << "Max Loss: " << max_loss << std::endl
                 << "Max Cost Reduction: " << max_cost_reduction << std::endl
                 << "Cost Minimizing Target: " << cost_minimizer << std::endl;
         // Returning {min_loss, max_loss, max_cost_reduction, cost_minimizer}
@@ -169,7 +174,7 @@ namespace gosdt {
             usize minimizer = 0;
             for (usize j = 0; j < n_targets; j++)
             {
-                auto cost = 0.0f;
+                auto cost = 0;
                 for (usize k = 0; k < n_targets; k++)
                 {
                     cost += costs(j, k) * (f32)distributions(i, k);
