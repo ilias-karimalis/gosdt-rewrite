@@ -14,6 +14,7 @@
 #pragma once
 
 #include <cstddef>
+#include <cassert>
 
 template<class T>
 struct Matrix {
