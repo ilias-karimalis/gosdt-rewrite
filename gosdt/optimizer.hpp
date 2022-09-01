@@ -37,6 +37,9 @@ namespace gosdt {
         std::vector<Bitset> bitset_storage;
         std::vector<Node> node_storage;
 
+        u32 nodes_created = 0;
+        u32 useless_nodes_created = 0;
+
         // Statistics produced by optimizing
         struct OptimizationStatistics {
             u64 time;
@@ -55,11 +58,11 @@ namespace gosdt {
         extract();
 
         void
-        split_bitset(usize feature_index, const Bitset & capture_set);
+        split_bitset_local(usize feature_index, const Bitset & capture_set);
 
-        std::pair<const Bitset, Node>&
-        find_or_create(Bitset id, const Bitset* parent);
+        Node construct_node(const Bitset &identifier, const Bitset *parent_id);
 
+        Node &find_or_create_local(Bitset &identifier, const Bitset *parent, usize lb_index);
     };
 
 }

@@ -45,18 +45,18 @@ namespace gosdt {
         Dataset(std::istream & input_stream, const Config& configuration);
         ~Dataset() = default;
 
-        [[nodiscard]] std::tuple<u64, u64, u64, usize>
-        calculate_bounds(const Bitset& capture_set) const;
-
         // Helper functions for the ctor.
-        void
-        construct_bitmasks(std::istream & input_stream);
+        void construct_bitmasks(std::istream & input_stream);
+        void construct_cost_matrices();
+        void construct_majority_bitmask();
 
-        void
-        construct_cost_matrices();
 
-        void
-        construct_majority_bitmask();
+        struct Bounds {
+            u64 lower_bound;
+            u64 upper_bound;
+            usize optimal_feature;
+        };
+        [[nodiscard]] Bounds calculate_bounds(const Bitset& capture_set) const;
 
     };
 

@@ -16,7 +16,7 @@ namespace gosdt {
         construct_majority_bitmask();
     }
 
-    std::tuple<u64, u64, u64, usize>
+    Dataset::Bounds
     Dataset::calculate_bounds(const Bitset& capture_set) const
     {
         DVOUT << "[Dataset::calculate_bounds] Computing Bounds for Capture Set\n";
@@ -54,10 +54,9 @@ namespace gosdt {
 
         DVOUT << "[Dataset::calculate_bounds] Computing the Lower Bound of a Capture Set\n";
         // Compute the equivalent point loss for the capture set
-        u64 eqp_loss = 0, max_cost_reduction = 0;
+        u64 eqp_loss = 0;
         for (usize t = 0; t < n_targets; t++)
         {
-            max_cost_reduction += diff_costs[t] * distribution[t];
             // Captured majority points
             Bitset::bit_and(majority, capture_set, work_buffer, false);
             Bitset::bit_and(targets[t], work_buffer, work_buffer, false);
@@ -69,16 +68,14 @@ namespace gosdt {
             eqp_loss += mismatch_costs[t] * work_buffer.count();
         }
 
-        auto min_loss = eqp_loss;
-        if (min_loss > max_loss)
-            min_loss = max_loss;
+        if (eqp_loss > max_loss)
+            eqp_loss = max_loss;
 
-        DVOUT << "[Dataset::calculate_bounds] Min Loss: " << min_loss << std::endl
-                << "Max Loss: " << max_loss << std::endl
-                << "Max Cost Reduction: " << max_cost_reduction << std::endl
-                << "Cost Minimizing Target: " << cost_minimizer << std::endl;
-        // Returning {min_loss, max_loss, max_cost_reduction, cost_minimizer}
-        return {min_loss, max_loss, max_cost_reduction, cost_minimizer};
+        return {
+            .lower_bound = eqp_loss + n_rows,
+            .upper_bound = max_loss + n_rows,
+            .optimal_feature = cost_minimizer
+        };
     }
 
     void

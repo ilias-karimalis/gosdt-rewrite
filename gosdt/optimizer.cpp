@@ -21,9 +21,9 @@ namespace gosdt {
         std::cout << "[gosdt::Optimizer::optimize] Starting Optimization\n";
         auto start_time = std::chrono::steady_clock::now();
         queue.emplace(root, Message::Priority::ZERO);
-        auto& [_, root_node] = find_or_create(root, nullptr);
+        auto root_node = construct_node(root, nullptr);
+        graph.emplace(root, std::move(root_node));
 
-        DOUT << "Root UB: " << root_node.upper_bound << " LB: "<< root_node.lower_bound << std::endl;
         u32 n_iterations = 0;
         while (global_upper_bound - global_lower_bound > config.optimality_gap
             && !queue.empty()
@@ -48,7 +48,8 @@ namespace gosdt {
             u64 upper_bound_prime = std::numeric_limits<u64>::max();
             for (usize feature = 0; feature < dataset.n_columns; feature++)
             {
-                split_bitset(feature, message_bitset);
+                split_bitset_local(feature, message_bitset);
+
                 // There should be:
                 //      - Minimum Support Bound
                 //      - Incremental Accuracy
@@ -57,14 +58,17 @@ namespace gosdt {
                 // which holds <Bitset, Node> pairs, and then we can decide whether to add them into the graph after the fact
                 // based on whether they're good enough to be elements of a final tree.
                 // TODO also we should create the nodes in the local storage buffer.
-                auto& left_child = find_or_create(bitset_storage[2*feature], &bitset).second;
-                auto& right_child = find_or_create(bitset_storage[2*feature + 1], &bitset).second;
+                if (bitset_storage[2*feature].empty() || bitset_storage[2*feature + 1].empty())
+                    continue;
+
+                auto& lchild = find_or_create_local(bitset_storage[2*feature], &bitset, 2*feature);
+                auto& rchild = find_or_create_local(bitset_storage[2*feature + 1], &bitset, 2*feature+1);
 
                 // Create bounds as if feature were chosen for splitting
                 lower_bound_prime = std::max(
-                    lower_bound_prime,left_child.lower_bound + right_child.lower_bound);
+                    lower_bound_prime,lchild.lower_bound + rchild.lower_bound);
                 upper_bound_prime = std::min(
-                    upper_bound_prime, left_child.upper_bound + right_child.upper_bound);
+                    upper_bound_prime, lchild.upper_bound + rchild.upper_bound);
             }
 
             // Signal the parents if an update occurred
@@ -87,14 +91,20 @@ namespace gosdt {
             }
 
             for (usize feature = 0; feature < dataset.n_columns; feature++) {
-                auto left = find_or_create(bitset_storage[2*feature], &bitset).second;
-                auto right = find_or_create(bitset_storage[2*feature + 1], &bitset).second;
+
+                if (bitset_storage[2*feature].empty() || bitset_storage[2*feature + 1].empty())
+                    continue;
+
+                auto& lchild = node_storage[2*feature];
+                auto& rchild = node_storage[2*feature + 1];
 
                 // Create bounds as if feature were chosen for splitting
-                lower_bound_prime = left.lower_bound + right.lower_bound;
-                upper_bound_prime = left.upper_bound + right.upper_bound;
+                lower_bound_prime = lchild.lower_bound + rchild.lower_bound;
+                upper_bound_prime = lchild.upper_bound + rchild.upper_bound;
                 if (lower_bound_prime < upper_bound_prime
                     && lower_bound_prime <= node.upper_bound) {
+                    graph.emplace(bitset_storage[2*feature], std::move(node_storage[2*feature]));
+                    graph.emplace(bitset_storage[2*feature + 1], std::move(node_storage[2*feature + 1]));
                     queue.emplace(bitset_storage[2*feature], Message::Priority::ZERO);
                     queue.emplace(bitset_storage[2*feature + 1], Message::Priority::ZERO);
                 }
@@ -111,6 +121,8 @@ namespace gosdt {
         std::cout << "[gosdt::Optimizer::optimize] Completed optimization\n";
         global_upper_bound = root_node.upper_bound;
         global_lower_bound = root_node.lower_bound;
+
+        std::cout << "Nodes Created: " << nodes_created << " Bad Nodes: " << useless_nodes_created << std::endl;
 
         return {
             .time = duration<ch::steady_clock, ch::milliseconds>(start_time, end_time),
@@ -132,35 +144,43 @@ namespace gosdt {
     }
 
     void
-    Optimizer::split_bitset(usize feature_index, const Bitset &capture_set)
+    Optimizer::split_bitset_local(usize feature_index, const Bitset &capture_set)
     {
-        DVOUT << "[Optimizer::split_bitset] splitting bitset on feature index: " << feature_index << std::endl;
+        DVOUT << "[Optimizer::split_bitset_local] splitting bitset on feature index: " << feature_index << std::endl;
         // subset of capture_set such that feature j is negative
         Bitset::bit_and(dataset.features[feature_index], capture_set, bitset_storage[2*feature_index], true);
         // subset of capture_set such that feature j is positive
         Bitset::bit_and(dataset.features[feature_index], capture_set, bitset_storage[2*feature_index + 1], false);
     }
 
-    std::pair<const Bitset, Node>&
-    Optimizer::find_or_create(Bitset id, const Bitset* parent_id) {
-        if (graph.contains(id)) {
-            return *graph.find(id);
-        }
-        auto [min_loss, max_loss, mcr, cm] = dataset.calculate_bounds(id);
+    Node
+    Optimizer::construct_node(const Bitset& identifier, const Bitset* parent_id)
+    {
         auto node = Node(parent_id);
-        // Needs comments
-        node.upper_bound = max_loss + dataset.n_rows;
-        node.lower_bound = min_loss + dataset.n_rows;
+        auto [lower_bound, upper_bound, optimal_feature] = dataset.calculate_bounds(identifier);
+        node.lower_bound = lower_bound;
+        node.upper_bound = upper_bound;
+        node.optimal_feature = optimal_feature;
 
-        // Check if we fail bounds
+        nodes_created++;
+        // Check if we fail some bounds.
         auto incremental_accuracy = (node.upper_bound - node.lower_bound) <= dataset.n_rows;
         auto leaf_accuracy = node.upper_bound <= 2 * dataset.n_rows;
-
-        if (incremental_accuracy || leaf_accuracy || id.empty()) {
-            DVOUT << "Node should not be split again" << std::endl;
+        if (incremental_accuracy || leaf_accuracy) {
             node.lower_bound = node.upper_bound;
+            useless_nodes_created++;
         }
-        graph.emplace(id, std::move(node));
-        return *graph.find(id);
+        return node;
+    }
+
+    Node&
+    Optimizer::find_or_create_local(Bitset &identifier, const Bitset *parent, usize lb_index)
+    {
+        if (graph.contains(identifier)) {
+            return graph.find(identifier)->second;
+        }
+        node_storage[lb_index] = construct_node(identifier, parent);
+        return node_storage[lb_index];
+
     }
 }

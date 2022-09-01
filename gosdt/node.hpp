@@ -20,8 +20,7 @@ namespace gosdt {
         u64 upper_bound;
         u64 lower_bound;
 
-        opt<u64> max_cost_reduction;
-        opt<usize> cost_minimizer;
+        usize optimal_feature;
 
         // This should only be used for the
         Node();
