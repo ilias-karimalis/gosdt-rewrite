@@ -35,6 +35,7 @@ namespace gosdt {
         result.size = optimization_result.graph_size;
         result.models = extraction_result.models;
         result.time = optimization_result.time;
+        result.model_loss = ((f64) result.upper_bound) / ((f64) dataset.n_rows * config.regularization);
 
         // END resource usage statistics and timing
         getrusage(RUSAGE_SELF, &usage_end);

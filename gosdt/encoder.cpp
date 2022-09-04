@@ -27,9 +27,8 @@ namespace gosdt {
             header.push_back(header_token);
             n_columns = header.size();
         }
-        // TODO Figure out a better error reporting system rather than just using asserts.
+
         DASSERT(n_columns > 0);
-        DOUT << "Header Row Size: " << header.size() << " " << n_columns << std::endl;
         // Tokenize the rest of the csv file
         n_rows = 0;
         while (const char * row_string = line_reader.next_line()) {
@@ -116,10 +115,7 @@ namespace gosdt {
         // type has.
         n_targets = values_per_column[n_columns - 1].size();
         DOUT << "[Encoder::Encoder] [nRows, nFeatureColumns, nTargets]: [" << n_rows << ", " << n_columns-1 << ", " << n_targets << "]\n";
-        
-        for (auto type : type_per_column) {
-            DOUT << type << std::endl;
-        }
+
 
         DVOUT << "[Encoder::Encoder] Constructing the set of encoding rules\n";
         std::vector<std::tuple<usize, Type, Relation, std::string>> codex;
@@ -170,15 +166,9 @@ namespace gosdt {
 
             if (i == n_columns - 1) {
                 n_binary_targets = codex.size() - initial_size;
-                DOUT << codex.size() << " " << initial_size << std::endl;
             }
         }
         n_binary_columns = codex.size() - n_binary_targets;
-        DOUT << "Codex Size: " << codex.size() << std::endl;
-        for (auto& [i, type, relation, str_value] : codex)
-        {
-            DOUT << "Feature: " << i << " Type: " << type << " Value: " << str_value << std::endl;
-        }
 
         DVOUT << "[Encoder::Encoder] Encoding the tokenized data using codex\n";
         for (usize i = 0; i < n_rows; i++)

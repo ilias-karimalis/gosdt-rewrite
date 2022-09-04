@@ -29,9 +29,11 @@ namespace gosdt {
             && !queue.empty()
             && !time_limit_exceeded<ch::steady_clock, ch::seconds>(start_time, config.time_limit))
         {
-            DOUT << "[gosdt::Optimizer::optimize] [ITERATION, QUEUE_SIZE, GRAPH_SIZE]: [" << n_iterations
-                 << ", " << queue.size() << ", " << graph.size() << "]\n";
 
+            if (n_iterations % 100000 == 0) {
+                DOUT << "[gosdt::Optimizer::optimize] [ITERATION, QUEUE_SIZE, GRAPH_SIZE]: [" << n_iterations
+                     << ", " << queue.size() << ", " << graph.size() << "]\n";
+            }
             n_iterations++;
 
             // NOTE: This requires that message.bitset exists.
@@ -123,7 +125,7 @@ namespace gosdt {
         global_lower_bound = root_node.lower_bound;
 
         std::cout << "Nodes Created: " << nodes_created << " Bad Nodes: " << useless_nodes_created << std::endl;
-
+        std::cout << "Root Optimal Feature: " << root_node.optimal_feature << "\n";
         return {
             .time = duration<ch::steady_clock, ch::milliseconds>(start_time, end_time),
             .iterations = n_iterations,

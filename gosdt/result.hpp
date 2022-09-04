@@ -18,7 +18,7 @@ namespace gosdt {
         u32 iterations;
         u64 lower_bound;
         u64 upper_bound;
-        u64 model_loss;
+        f64 model_loss;
 
         f32 ru_utime;
         f32 ru_stime;

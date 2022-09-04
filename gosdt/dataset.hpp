@@ -38,7 +38,7 @@ namespace gosdt {
         // NOTE: not sure if all of these are actually needed so I'll avoid
         //       writing these for now.
         Matrix<u64> costs;
-        std::vector<u64> diff_costs;
+        [[maybe_unused]] std::vector<u64> diff_costs;
         std::vector<u64> match_costs;
         std::vector<u64> mismatch_costs;
 

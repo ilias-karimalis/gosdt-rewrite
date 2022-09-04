@@ -1,7 +1,7 @@
 #pragma once
 
 #include <queue>
-#include <set>
+#include <unordered_set>
 
 #include "bitset.hpp"
 #include "message.hpp"
@@ -11,9 +11,11 @@ namespace gosdt
 
     struct Queue {
 
-        // TODO this will work for now, but I should refelect with Jerry to pick a better solution
-        std::deque<Bitset> pzero;
-        std::deque<Bitset> pone;
+        // TODO THis is really slow and is grinding our runtime to a halt we need a better solution NOW
+        //      extra copies of bitset are acceptable to avoid this, imo
+        std::priority_queue<Message, std::vector<Message>, std::less<>> pq;
+        std::unordered_set<Bitset> in_queue;
+
 
         Queue() = default;
         ~Queue() = default;

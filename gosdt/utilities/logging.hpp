@@ -9,7 +9,7 @@
 #include <cassert>
 
 //#define _DEBUG_VERBOSE
-//#define _DEBUG
+#define _DEBUG
 
 
 #ifdef _DEBUG_VERBOSE
