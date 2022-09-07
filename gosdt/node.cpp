@@ -9,7 +9,7 @@ namespace gosdt {
     Node::Node(const Bitset* parent)
     {
         if (parent != nullptr) {
-            parents.push_back(parent);
+            parents.insert(parent);
         }
 
         upper_bound = std::numeric_limits<u64>::max();

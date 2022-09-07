@@ -1,3 +1,28 @@
+// GOSDT algorithm
+//
+//
+// MIT License
+//
+// Copyright (c) 2022 Systopia Lab, Computer Science, University of British Columbia
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included in all
+// copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+// SOFTWARE.
+
 #include "optimizer.hpp"
 #include "utilities/logging.hpp"
 #include "utilities/time.hpp"
@@ -125,6 +150,7 @@ namespace gosdt {
         global_lower_bound = root_node.lower_bound;
 
         std::cout << "Nodes Created: " << nodes_created << " Bad Nodes: " << useless_nodes_created << std::endl;
+        std::cout << "New parents found: " << new_parent_found << "\n";
         std::cout << "Root Optimal Feature: " << root_node.optimal_feature << "\n";
         return {
             .time = duration<ch::steady_clock, ch::milliseconds>(start_time, end_time),
@@ -141,7 +167,6 @@ namespace gosdt {
             .time = 0,
             .iterations = 0,
             .model_loss = 0,
-            .models = {},
         };
     }
 
@@ -175,11 +200,38 @@ namespace gosdt {
         return node;
     }
 
+    Node
+    Optimizer::construct_scoped_node(const Bitset &identifier, const Bitset *parent_id)
+    {
+        auto node = Node(parent_id);
+        auto [lower_bound, upper_bound, optimal_feature] = dataset.calculate_bounds(identifier);
+        node.lower_bound = lower_bound;
+        node.upper_bound = upper_bound;
+        node.optimal_feature = optimal_feature;
+
+        // Set up the scope for this node.
+
+
+        nodes_created++;
+        // Check if we fail some bounds.
+        auto incremental_accuracy = (node.upper_bound - node.lower_bound) <= dataset.n_rows;
+        auto leaf_accuracy = node.upper_bound <= 2 * dataset.n_rows;
+        if (incremental_accuracy || leaf_accuracy) {
+            node.lower_bound = node.upper_bound;
+            useless_nodes_created++;
+        }
+        return node;
+
+    }
+
     Node&
     Optimizer::find_or_create_local(Bitset &identifier, const Bitset *parent, usize lb_index)
     {
         if (graph.contains(identifier)) {
-            return graph.find(identifier)->second;
+            auto& ret_node = graph.find(identifier)->second;
+            auto insert_ret = ret_node.parents.insert(parent);
+            if (insert_ret.second) new_parent_found++;
+            return ret_node;
         }
         node_storage[lb_index] = construct_node(identifier, parent);
         return node_storage[lb_index];

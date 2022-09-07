@@ -1,3 +1,28 @@
+// GOSDT algorithm
+//
+//
+// MIT License
+//
+// Copyright (c) 2022 Systopia Lab, Computer Science, University of British Columbia
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included in all
+// copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+// SOFTWARE.
+
 #include "dataset.hpp"
 #include "utilities/logging.hpp"
 
@@ -10,6 +35,14 @@ namespace gosdt {
 
         DVOUT << "[Dataset::Dataset] Constructing Bitmasks\n";
         construct_bitmasks(input_stream);
+
+        // If the system regularization is larger than the number of dataset samples we should warn the user that the
+        // excess regularization is ineffective.
+        if (config.regularization > n_rows) {
+            std::cout << "[WARNING] Chosen regularization ("
+                      << config.regularization << ") is larger than dataset size: " << n_rows << "\n";
+        }
+
         DVOUT << "[Dataset::Dataset] Constructing Cost Matrices\n";
         construct_cost_matrices();
         DVOUT << "[Dataset::Dataset] Constructing Majority Bitmask\n";

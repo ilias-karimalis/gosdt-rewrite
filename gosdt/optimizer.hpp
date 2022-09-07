@@ -1,10 +1,34 @@
+// GOSDT algorithm
+//
+//
+// MIT License
+//
+// Copyright (c) 2022 Systopia Lab, Computer Science, University of British Columbia
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included in all
+// copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+// SOFTWARE.
+
 #pragma once
 
 #include <unordered_map>
 
 #include "utilities/numeric_types.hpp"
 
-#include "model.hpp"
 #include "bitset.hpp"
 #include "node.hpp"
 #include "config.hpp"
@@ -20,8 +44,6 @@ namespace gosdt {
             f32 time;
             u32 iterations;
             f32 model_loss;
-
-            std::vector<Model> models;
         };
 
         Bitset root;
@@ -39,6 +61,7 @@ namespace gosdt {
 
         u32 nodes_created = 0;
         u32 useless_nodes_created = 0;
+        u32 new_parent_found = 0;
 
         // Statistics produced by optimizing
         struct OptimizationStatistics {
@@ -51,16 +74,15 @@ namespace gosdt {
 
         Optimizer(const Dataset& dataset, const Config& config);
 
-        OptimizationStatistics
-        optimize();
+        OptimizationStatistics optimize();
 
-        Result
-        extract();
+        Result extract();
 
-        void
-        split_bitset_local(usize feature_index, const Bitset & capture_set);
+        void split_bitset_local(usize feature_index, const Bitset & capture_set);
 
         Node construct_node(const Bitset &identifier, const Bitset *parent_id);
+
+        Node construct_scoped_node(const Bitset &identifier, const Bitset *parent_id);
 
         Node &find_or_create_local(Bitset &identifier, const Bitset *parent, usize lb_index);
     };
